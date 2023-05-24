@@ -1,0 +1,12 @@
+version: '3.3'
+
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: "${CRPPR_DATABASE_DATABASE}"
+      POSTGRES_USER: "${CRPPR_DATABASE_USERNAME}"
+      POSTGRES_PASSWORD: "${CRPPR_DATABASE_PASSWORD}"
+    ports:
+      - "5432:5432"
+

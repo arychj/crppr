@@ -1,0 +1,14 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b3388d31_002D0399_002D4a0e_002D84fc_002Df67ac70475b1/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Test1" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;Or&gt;
+    &lt;ProjectFile&gt;1995DD4C-1815-4B68-B0C2-9BF28EFE65C5/f:UnitTest1.cs&lt;/ProjectFile&gt;
+    &lt;TestAncestor&gt;
+      &lt;TestId&gt;NUnit3x::1995DD4C-1815-4B68-B0C2-9BF28EFE65C5::net6.0::crppr.api.test.DatabaseTests.ConnectionString&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::1995DD4C-1815-4B68-B0C2-9BF28EFE65C5::net6.0::crppr.api.test.DatabaseTests.DatabaseConnection&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::1995DD4C-1815-4B68-B0C2-9BF28EFE65C5::net6.0::crppr.api.test.DatabaseTests.Migration&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::1995DD4C-1815-4B68-B0C2-9BF28EFE65C5::net6.0::crppr.api.test.ThingTests.TestThing&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::1995DD4C-1815-4B68-B0C2-9BF28EFE65C5::net6.0::crppr.api.test.ThingTests&lt;/TestId&gt;
+    &lt;/TestAncestor&gt;
+  &lt;/Or&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=crppr/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
