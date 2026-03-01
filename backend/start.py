@@ -6,7 +6,7 @@ Environment variables
 ---------------------
 CRPPR_TLS_ENABLED          "True" to serve over HTTPS (default: "False")
 CRPPR_TLS_CERT_DIR         Directory for cert.pem / key.pem (default: "certs")
-CRPPR_PORT                 Main application port (default: 8000)
+CRPPR_LISTEN_PORT          Main application port (default: 8000)
 CRPPR_HTTP_REDIRECT_PORT   HTTP listener that 301-redirects to HTTPS (default: 8080)
 CRPPR_TLS_PORT             External HTTPS port used in redirect Location header (default: 443)
 """
@@ -25,7 +25,7 @@ CERT_FILE = CERT_DIR / "cert.pem"
 KEY_FILE = CERT_DIR / "key.pem"
 
 HOST = "0.0.0.0"
-PORT = int(os.getenv("CRPPR_PORT", "8000"))
+PORT = int(os.getenv("CRPPR_LISTEN_PORT", "8000"))
 HTTP_REDIRECT_PORT = int(os.getenv("CRPPR_HTTP_REDIRECT_PORT", "8080"))
 TLS_PORT = int(os.getenv("CRPPR_TLS_PORT", "443"))
 
