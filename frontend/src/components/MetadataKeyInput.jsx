@@ -14,7 +14,7 @@ export default function MetadataKeyInput({ value, onChange, className = '', styl
 
   useEffect(() => {
     listMetadataAttributes()
-      .then((attrs) => setAllKeys(attrs.map((a) => a.name)))
+      .then((attrs) => setAllKeys(attrs.map((a) => a.name).sort((a, b) => a.localeCompare(b))))
       .catch(console.error);
   }, []);
 

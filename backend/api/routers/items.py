@@ -38,6 +38,10 @@ def _item_to_out(item: Item) -> ItemOut:
         )
         for mv in sorted_mvs
     ]
+    sorted_children = sorted(
+        item.children,
+        key=lambda c: (not c.is_container, (c.name or "").lower()),
+    )
     children = [
         ItemChildOut(
             id=c.id,
@@ -45,7 +49,7 @@ def _item_to_out(item: Item) -> ItemOut:
             name=c.name,
             is_container=c.is_container,
         )
-        for c in item.children
+        for c in sorted_children
     ]
     return ItemOut(
         id=item.id,
@@ -67,7 +71,12 @@ def _item_to_out(item: Item) -> ItemOut:
 
 @router.get("/item", response_model=list[ItemOut])
 def list_items(db: Session = Depends(get_db)):
-    items = db.query(Item).filter(Item.parent_id.is_(None)).all()
+    items = (
+        db.query(Item)
+        .filter(Item.parent_id.is_(None))
+        .order_by(Item.is_container.desc(), func.lower(Item.name))
+        .all()
+    )
     return [_item_to_out(i) for i in items]
 
 

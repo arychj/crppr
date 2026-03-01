@@ -319,7 +319,11 @@ export default function ItemDetailPage() {
               <p className="text-gray-400 italic text-sm">No items inside this container.</p>
             ) : (
               <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                {[...item.children].sort((a, b) => (b.is_container ? 1 : 0) - (a.is_container ? 1 : 0)).map((child) => (
+                {[...item.children].sort((a, b) => {
+                  const cmp = (b.is_container ? 1 : 0) - (a.is_container ? 1 : 0);
+                  if (cmp !== 0) return cmp;
+                  return (a.name || '').localeCompare(b.name || '');
+                }).map((child) => (
                   <li key={child.id}>
                     <Link
                       to={`/ident/${child.ident}`}
