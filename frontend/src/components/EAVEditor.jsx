@@ -21,6 +21,9 @@ export default function EAVEditor({ itemId, existingValues = [], onSaved }) {
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [keyColWidth, setKeyColWidth] = useState('auto');
+  const measRef = useRef(null);
   const newValueRef = useRef(null);
   const toast = useToast();
 
@@ -34,6 +37,19 @@ export default function EAVEditor({ itemId, existingValues = [], onSaved }) {
     );
     setEditingIdx(null);
   }, [existingValues]);
+
+  // Measure the longest key name to size the key column
+  useEffect(() => {
+    if (!measRef.current || rows.length === 0) { setKeyColWidth('auto'); return; }
+    const span = measRef.current;
+    let max = 0;
+    for (const row of rows) {
+      span.textContent = row.attribute_name;
+      max = Math.max(max, span.offsetWidth);
+    }
+    span.textContent = '';
+    setKeyColWidth(max > 0 ? `${max + 4}px` : 'auto'); // +4 for a little breathing room
+  }, [rows]);
 
   // ── click-to-edit existing rows ──────────────────────────────────
   const startEditing = (idx) => {
@@ -91,6 +107,7 @@ export default function EAVEditor({ itemId, existingValues = [], onSaved }) {
       toast(`Saved "${newKey}"`);
       setNewKey('');
       setNewValue('');
+      setShowNew(false);
       onSaved?.();
     } catch (err) {
       toast(`Failed to save: ${err.message}`, 'error');
@@ -103,10 +120,21 @@ export default function EAVEditor({ itemId, existingValues = [], onSaved }) {
     <div className="space-y-3">
       <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">Metadata</h2>
 
+      {/* Hidden span used to measure key text widths */}
+      <span
+        ref={measRef}
+        className="invisible absolute whitespace-nowrap text-sm font-medium"
+        aria-hidden="true"
+      />
+
       {/* Existing metadata — click to edit */}
       {rows.map((row, idx) => (
-        <div key={row.attribute_id} className="flex items-center gap-2">
-          <span className="w-36 text-sm font-medium text-gray-600 dark:text-gray-400 text-right truncate" title={row.attribute_name}>
+        <div key={row.attribute_id} className="flex items-center gap-3 px-1">
+          <span
+            style={{ width: keyColWidth, minWidth: keyColWidth }}
+            className="shrink-0 text-sm font-medium text-gray-600 dark:text-gray-400 text-right pr-1"
+            title={row.attribute_name}
+          >
             {row.attribute_name}
           </span>
           {editingIdx === idx ? (
@@ -128,38 +156,59 @@ export default function EAVEditor({ itemId, existingValues = [], onSaved }) {
               {row.value || <span className="text-gray-400 italic">empty</span>}
             </span>
           )}
+          {editingIdx === idx ? (
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); handleRemove(row, idx); }}
+              className="text-xs text-red-500 hover:text-red-700"
+              title="Remove"
+            >
+              ✕
+            </button>
+          ) : (
+            <span className="text-xs invisible">✕</span>
+          )}
+        </div>
+      ))}
+
+      {/* Togglable new-metadata row */}
+      {showNew ? (
+        <div className="flex items-center gap-3 px-1">
+          <MetadataKeyInput
+            value={newKey}
+            onChange={setNewKey}
+            className="w-1/3 shrink-0"
+            placeholder="Key"
+            onSelect={() => newValueRef.current?.focus()}
+          />
+          <input
+            ref={newValueRef}
+            type="text"
+            placeholder="Value"
+            className="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
+            value={newValue}
+            onChange={(e) => setNewValue(e.target.value)}
+            onBlur={handleNewRowSave}
+            onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
+          />
           <button
             type="button"
-            onClick={() => handleRemove(row, idx)}
-            className="text-xs text-red-500 hover:text-red-700"
-            title="Remove"
+            onClick={() => { setShowNew(false); setNewKey(''); setNewValue(''); }}
+            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-500 dark:hover:text-gray-300"
+            title="Cancel"
           >
             ✕
           </button>
         </div>
-      ))}
-
-      {/* Always-visible empty row for adding new metadata */}
-      <div className="flex items-center gap-2">
-        <MetadataKeyInput
-          value={newKey}
-          onChange={setNewKey}
-          className="w-36"
-          placeholder="Key"
-          onSelect={() => newValueRef.current?.focus()}
-        />
-        <input
-          ref={newValueRef}
-          type="text"
-          placeholder="Value"
-          className="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
-          value={newValue}
-          onChange={(e) => setNewValue(e.target.value)}
-          onBlur={handleNewRowSave}
-          onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
-        />
-        <span className="text-xs invisible">✕</span>
-      </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowNew(true)}
+          className="text-xs text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition ml-1"
+        >
+          + new
+        </button>
+      )}
     </div>
   );
 }

@@ -20,7 +20,7 @@ import {
 } from '@mdi/js';
 
 export default function SideMenu() {
-  const { open, toggle } = useDrawer();
+  const { open, toggle, setDrawerOpen } = useDrawer();
   const location = useLocation();
   const navigate = useNavigate();
   const { dark, toggle: toggleTheme } = useTheme();
@@ -72,12 +72,28 @@ export default function SideMenu() {
     { to: '/ident', label: 'Label Generator', icon: mdiPound },
   ];
 
+  // Close sidebar on mobile when navigating
+  useEffect(() => {
+    if (open && window.innerWidth < 768) {
+      setDrawerOpen(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   return (
     <>
-      {/* Sidebar — always visible; collapses to icon rail when closed */}
+      {/* Backdrop overlay — mobile only, visible when sidebar is open */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — hidden on mobile when closed; icon rail on desktop when closed */}
       <aside
-        className={`fixed top-0 left-0 z-30 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-200 ease-in-out flex flex-col ${
-          open ? 'w-80' : 'w-12'
+        className={`fixed top-0 left-0 z-50 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-200 ease-in-out flex flex-col pt-[env(safe-area-inset-top)] ${
+          open ? 'w-80' : 'w-12 max-md:-translate-x-full'
         }`}
       >
         {/* ── Expanded header: logo + search + toggle ── */}
@@ -211,7 +227,7 @@ export default function SideMenu() {
 
       {/* QR Scanner Modal */}
       {scanOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setScanOpen(false)}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => setScanOpen(false)}>
           <div className={`rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 transition-colors duration-300 ${scanMatched === 'match' ? 'bg-green-500 dark:bg-green-600' : scanMatched === 'no-match' ? 'bg-amber-500 dark:bg-amber-600' : 'bg-white dark:bg-gray-800'}`} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className={`text-lg font-semibold transition-colors duration-300 ${scanMatched ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}>Scan Code</h2>

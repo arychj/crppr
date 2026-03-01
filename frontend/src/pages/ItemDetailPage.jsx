@@ -161,8 +161,8 @@ export default function ItemDetailPage() {
       <div className="flex gap-4 items-stretch">
         {/* ────────── Header (details box) ────────── */}
         <div ref={detailsBoxRef} className="flex-1 min-w-0 bg-white dark:bg-gray-800 rounded shadow p-5 flex flex-col">
-        {/* Top row: name/description left, ident/address/timestamp right */}
-        <div className="flex gap-6">
+        {/* Top row: name/description left, ident/address/timestamp right (stacks on mobile) */}
+        <div className="flex flex-col md:flex-row md:gap-6">
           {/* Left: name + description */}
           <div className="flex-1 min-w-0 space-y-2">
             {/* Click-to-edit name */}
@@ -210,7 +210,7 @@ export default function ItemDetailPage() {
           </div>
 
           {/* Right: ident + URL + address + last updated */}
-          <div className="flex flex-col items-end gap-1 shrink-0">
+          <div className="flex flex-col items-start md:items-end gap-1 shrink-0 mt-2 md:mt-0">
             <span className="font-mono text-sm text-gray-500 dark:text-gray-400">{item.ident}</span>
             {baseUrl && (
               <a
@@ -284,9 +284,9 @@ export default function ItemDetailPage() {
         </div>
       </div>
 
-        {/* QR code (outside details box) */}
+        {/* QR code (outside details box, hidden on mobile) */}
         {baseUrl && (
-          <div className="shrink-0 self-stretch">
+          <div className="shrink-0 self-stretch hidden md:block">
             <QRCodeStyled
               data={`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
               displaySize={detailsBoxHeight}

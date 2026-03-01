@@ -5,9 +5,25 @@ const ThemeContext = createContext(null);
 export function ThemeProvider({ children }) {
   const [dark, setDark] = useState(() => {
     const stored = localStorage.getItem('crppr_theme');
-    if (stored) return stored === 'dark';
+    // Only use stored value if the user explicitly chose it
+    if (stored === 'dark' || stored === 'light') {
+      const explicit = localStorage.getItem('crppr_theme_explicit');
+      if (explicit === 'true') return stored === 'dark';
+    }
     return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
   });
+
+  // Listen for system preference changes when user hasn't explicitly chosen
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
+    if (!mq) return;
+    const handler = (e) => {
+      const explicit = localStorage.getItem('crppr_theme_explicit');
+      if (explicit !== 'true') setDark(e.matches);
+    };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -17,9 +33,17 @@ export function ThemeProvider({ children }) {
       root.classList.remove('dark');
     }
     localStorage.setItem('crppr_theme', dark ? 'dark' : 'light');
+
+    // Update favicon based on current theme
+    document.querySelectorAll("link[rel='icon']").forEach((link) => {
+      link.href = dark ? '/crppr-dark.svg' : '/crppr.svg';
+    });
   }, [dark]);
 
-  const toggle = () => setDark((d) => !d);
+  const toggle = () => {
+    localStorage.setItem('crppr_theme_explicit', 'true');
+    setDark((d) => !d);
+  };
 
   return (
     <ThemeContext.Provider value={{ dark, toggle }}>

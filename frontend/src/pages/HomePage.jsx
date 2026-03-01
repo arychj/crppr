@@ -35,7 +35,7 @@ export default function HomePage() {
 
       <SearchBar placeholder="Search by name, ident, description, or metadata…" />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Add Item */}
         <Link
           to="/new"
