@@ -296,28 +296,28 @@ export default function ItemDetailPage() {
                 <button
                   type="button"
                   onClick={() => setInfoModal({ open: true, title: 'URI', value: `${baseUrl.replace(/\/$/, '')}/-/${item.ident}` })}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 dark:text-gray-500"
+                  className="rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 dark:text-gray-500"
                   aria-label="Show URI"
                 >
-                  <Icon path={mdiLink} size={0.85} />
+                  <Icon path={mdiLink} size={0.7} />
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setInfoModal({ open: true, title: 'Address', value: item.address })}
-                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 dark:text-gray-500"
+                className="rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 dark:text-gray-500"
                 aria-label="Show address"
               >
-                <Icon path={mdiMapMarkerOutline} size={0.85} />
+                <Icon path={mdiMapMarkerOutline} size={0.7} />
               </button>
               {item.last_updated && (
                 <button
                   type="button"
                   onClick={() => setInfoModal({ open: true, title: 'Last Updated', value: new Date(item.last_updated).toLocaleString() })}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 dark:text-gray-500"
+                  className="rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 dark:text-gray-500"
                   aria-label="Show last updated"
                 >
-                  <Icon path={mdiClockEditOutline} size={0.85} />
+                  <Icon path={mdiClockEditOutline} size={0.7} />
                 </button>
               )}
             </div>

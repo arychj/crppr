@@ -6,7 +6,7 @@ import QRScanner from '../components/QRScanner';
 import useDocTitle from '../hooks/useDocTitle';
 import logo from '../assets/crppr.svg';
 import Icon from '@mdi/react';
-import { mdiPlus, mdiQrcodeScan, mdiPackageVariantClosed } from '@mdi/js';
+import { mdiPlus, mdiQrcodeScan, mdiPackageVariantClosed, mdiGhostOutline } from '@mdi/js';
 
 export default function HomePage() {
   const [tagline, setTagline] = useState('');
@@ -27,7 +27,7 @@ export default function HomePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div className="flex justify-center">
-        <img src={logo} alt="crppr" className="h-36 dark:invert" />
+        <img src={logo} alt="crppr" className="h-48 dark:invert" />
       </div>
       {tagline && (
         <p className="text-center text-2xl text-gray-500 dark:text-gray-400 italic">{tagline}</p>
@@ -75,12 +75,12 @@ export default function HomePage() {
             {recent.map((item) => (
               <Link
                 key={item.id}
-                to={`/ident/${item.ident}`}
+                to={item.ident ? `/ident/${item.ident}` : `/id/${item.id}`}
                 className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-sm"
               >
-                <div className="min-w-0 flex-1">
-                  <span className="font-mono text-gray-500 dark:text-gray-400 mr-2">{item.ident}</span>
-                  <span className="text-gray-800 dark:text-gray-100">{item.name || '(unnamed)'}</span>
+                <div className="min-w-0 flex-1 flex items-center">
+                  <span className="font-mono text-gray-500 dark:text-gray-400 mr-3 w-14 text-right inline-block flex-shrink-0">{item.ident || <span title="Ghost — this item has no ident"><Icon path={mdiGhostOutline} size={0.6} className="inline" /></span>}</span>
+                  <span className="text-gray-800 dark:text-gray-100 truncate">{item.name || '(unnamed)'}</span>
                 </div>
                 {item.is_container && (
                   <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">

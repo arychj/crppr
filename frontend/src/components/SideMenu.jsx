@@ -8,14 +8,16 @@ import logo from '../assets/crppr.svg';
 import Icon from '@mdi/react';
 import {
   mdiDockLeft,
+  mdiDockRight,
   mdiQrcodeScan,
   mdiPlus,
+  mdiHistory,
   mdiPackageVariantClosed,
   mdiTag,
-  mdiPound,
+  mdiSimOutline,
   mdiWeatherSunny,
   mdiWeatherNight,
-  mdiSwapVertical,
+  mdiFileArrowUpDownOutline,
   mdiCog,
   mdiClose,
 } from '@mdi/js';
@@ -25,6 +27,9 @@ export default function SideMenu() {
   const location = useLocation();
   const navigate = useNavigate();
   const { dark, toggle: toggleTheme } = useTheme();
+
+  // Collapsed logo hover state
+  const [logoHover, setLogoHover] = useState(false);
 
   // Search state
   const [query, setQuery] = useState('');
@@ -67,11 +72,12 @@ export default function SideMenu() {
   const [scanMatched, setScanMatched] = useState(null);
 
   const navLinks = [
-    { to: '/new', label: 'Add Item', icon: mdiPlus },
-    { to: '/inventory', label: 'Browse Inventory', icon: mdiPackageVariantClosed },
-    { to: '/metadata', label: 'Metadata Manager', icon: mdiTag },
-    { to: '/ident', label: 'Label Generator', icon: mdiPound },
-    { to: '/import-export', label: 'Import / Export', icon: mdiSwapVertical },
+    { to: '/new', label: 'Add', icon: mdiPlus },
+    { to: '/', label: 'Recents', icon: mdiHistory },
+    { to: '/inventory', label: 'Browse', icon: mdiPackageVariantClosed },
+    { to: '/metadata', label: 'Metadata', icon: mdiTag },
+    { to: '/ident', label: 'Labels', icon: mdiSimOutline },
+    { to: '/import-export', label: 'Backups', icon: mdiFileArrowUpDownOutline },
   ];
 
   // Close sidebar on mobile when navigating
@@ -98,13 +104,9 @@ export default function SideMenu() {
           open ? 'w-80' : 'w-12 max-md:-translate-x-full'
         }`}
       >
-        {/* ── Expanded header: logo + search + toggle ── */}
+        {/* ── Expanded header: search + add ── */}
         {open ? (
           <div className="flex items-center gap-2 p-3 border-b border-gray-200 dark:border-gray-700" ref={searchRef}>
-            <Link to="/" className="flex-shrink-0">
-              <img src={logo} alt="crppr" className="h-7 dark:invert" />
-            </Link>
-
             <div className="relative flex-1">
               <input
                 type="text"
@@ -139,42 +141,38 @@ export default function SideMenu() {
             </div>
 
             <button
-              onClick={toggle}
+              onClick={() => setScanOpen(true)}
               className="flex-shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-              aria-label="Collapse menu"
+              title="Scan Code"
             >
-              <Icon path={mdiDockLeft} size={0.85} className="text-gray-500 dark:text-gray-400" />
+              <Icon path={mdiQrcodeScan} size={0.85} className="text-gray-500 dark:text-gray-400" />
             </button>
           </div>
         ) : (
-          /* ── Collapsed header: sidebar toggle icon ── */
-          <div className="flex items-center justify-center p-3 border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={toggle}
-              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-              aria-label="Expand menu"
-            >
-              <Icon path={mdiDockLeft} size={0.85} className="text-gray-500 dark:text-gray-400" />
-            </button>
+          /* ── Collapsed header: logo / open toggle ── */
+          <div
+            className="flex items-center justify-center p-3 border-b border-gray-200 dark:border-gray-700 cursor-pointer"
+            onClick={toggle}
+            onMouseEnter={() => setLogoHover(true)}
+            onMouseLeave={() => setLogoHover(false)}
+            title="Expand menu"
+          >
+            <div className="flex items-center justify-center h-6 w-6">
+              {logoHover ? (
+                <Icon path={mdiDockRight} size={0.75} className="text-gray-500 dark:text-gray-400" />
+              ) : (
+                <img src={logo} alt="crppr" className="h-6 dark:invert" />
+              )}
+            </div>
           </div>
         )}
 
         {/* Nav links */}
         <nav className={`flex-1 space-y-1 ${open ? 'px-3' : 'px-1'}`}>
-          {/* Scan Code — first in the list */}
-          <button
-            onClick={() => setScanOpen(true)}
-            title="Scan Code"
-            className={`flex items-center gap-3 py-2 rounded-lg text-sm transition w-full text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${
-              open ? 'px-3' : 'justify-center px-0'
-            }`}
-          >
-            <Icon path={mdiQrcodeScan} size={0.85} className="flex-shrink-0" />
-            {open && 'Scan Code'}
-          </button>
-
           {navLinks.map((link) => {
-            const active = location.pathname === link.to || (link.to !== '/' && location.pathname.startsWith(link.to));
+            const active = link.to === '/'
+              ? location.pathname === '/'
+              : location.pathname === link.to || location.pathname.startsWith(link.to);
             return (
               <Link
                 key={link.to}
@@ -226,6 +224,18 @@ export default function SideMenu() {
           </Link>
         </div>
       </aside>
+
+      {/* Toggle button — only shown when sidebar is open */}
+      {open && (
+        <button
+          onClick={toggle}
+          className="fixed top-3 z-50 hidden md:flex items-center justify-center w-7 h-7 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out left-[20.25rem]"
+          style={{ top: 'calc(0.75rem + env(safe-area-inset-top))' }}
+          aria-label="Collapse menu"
+        >
+          <Icon path={mdiDockLeft} size={0.75} className="text-gray-500 dark:text-gray-400" />
+        </button>
+      )}
 
       {/* QR Scanner Modal */}
       {scanOpen && (

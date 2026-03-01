@@ -34,11 +34,11 @@ Each Item can have a short, unique **ident** (e.g. `0042` or `A7F3`) that you ca
 
 Idents are mutable — you can change, assign, or remove them at any time.
 
-### Ghosts
+#### Ghosts
 
 Not everything needs a label. A **ghost** is an item with no ident — it exists in the inventory but doesn't have a QR code or scannable label attached to it. Ghosts are perfect for things that aren't worth printing a label for but are still useful to know about: the bag of rubber bands in the junk drawer, the spare batteries in the flashlight, or that one HDMI cable you _know_ is in here somewhere.
 
-Ghost items show up in the app with a ᗣ icon in place of the ident. You can promote a ghost to a labeled item at any time by assigning an ident, or demote a labeled item to a ghost by clearing its ident. Any number of ghost items can coexist — uniqueness only applies to non-null idents.
+Ghost items show up in the app with a `ᗣ` icon in place of the ident. You can promote a ghost to a labeled item at any time by assigning an ident, or demote a labeled item to a ghost by clearing its ident. Any number of ghost items can coexist — uniqueness only applies to non-null idents.
 
 ### Metadata
 

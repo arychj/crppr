@@ -4,6 +4,8 @@ import { createItem, getItem } from '../api';
 import { useToast } from '../components/Toast';
 import MetadataKeyInput from '../components/MetadataKeyInput';
 import ItemPickerModal from '../components/ItemPickerModal';
+import Icon from '@mdi/react';
+import { mdiContentDuplicate } from '@mdi/js';
 
 export default function CreateItemPage() {
   const navigate = useNavigate();
@@ -84,16 +86,27 @@ export default function CreateItemPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="max-w-5xl mx-auto space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">New Item</h1>
-        <button
-          type="button"
-          onClick={() => setClonePickerOpen(true)}
-          className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-        >
-          Clone
-        </button>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Add Item</h1>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setClonePickerOpen(true)}
+            className="flex items-center gap-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+          >
+            <Icon path={mdiContentDuplicate} size={0.5} />
+            Clone
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={saving}
+            className="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded hover:bg-indigo-700 disabled:opacity-50 transition"
+          >
+            {saving ? 'Creating…' : '+ Add'}
+          </button>
+        </div>
       </div>
 
       <ItemPickerModal
@@ -252,14 +265,6 @@ export default function CreateItemPage() {
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition"
-        >
-          {saving ? 'Creating…' : 'Create'}
-        </button>
       </form>
     </div>
   );

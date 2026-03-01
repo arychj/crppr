@@ -30,7 +30,7 @@ export default function Layout() {
       </div>
 
       {/* Mobile bottom nav bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-around py-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-around py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
         <button onClick={() => setDrawerOpen(true)} className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-300">
           <Icon path={mdiMenu} size={1} />
           <span className="text-[10px]">Menu</span>
