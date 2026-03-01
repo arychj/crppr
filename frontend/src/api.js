@@ -7,7 +7,7 @@ async function request(path, options = {}) {
     ...options,
   });
   if (res.redirected) {
-    // Handle the 307 redirect from /a/{ident}
+    // Handle the 307 redirect from /ident/{ident}
     const redirectPath = new URL(res.url).pathname.replace(/^\/api/, '');
     return request(redirectPath, { method: 'GET' });
   }
@@ -25,41 +25,41 @@ async function request(path, options = {}) {
 // ── Items ──────────────────────────────────────────────────────────
 
 export function listRootItems() {
-  return request('/items');
+  return request('/item');
 }
 
 export function getItem(id) {
-  return request(`/items/${id}`);
+  return request(`/item/${id}`);
 }
 
 export function lookupByIdent(ident) {
-  return request(`/a/${ident}`);
+  return request(`/ident/${ident}`);
 }
 
 export function createItem(data) {
-  return request('/items', {
+  return request('/item', {
     method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
 export function updateItem(id, data) {
-  return request(`/items/${id}`, {
+  return request(`/item/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
 export function getItemPath(id) {
-  return request(`/items/${id}/path`);
+  return request(`/item/${id}/path`);
 }
 
 export function searchItems(query) {
-  return request(`/items/search?q=${encodeURIComponent(query)}`);
+  return request(`/item/search?q=${encodeURIComponent(query)}`);
 }
 
 export function recentItems() {
-  return request('/items/recent');
+  return request('/item/recent');
 }
 
 // ── Metadata ───────────────────────────────────────────────────────
@@ -89,14 +89,14 @@ export function deleteMetadataAttribute(id) {
 }
 
 export function setItemMetadata(itemId, values) {
-  return request(`/items/${itemId}/metadata`, {
+  return request(`/item/${itemId}/metadata`, {
     method: 'POST',
     body: JSON.stringify(values),
   });
 }
 
 export function deleteItemMetadata(itemId, attributeId) {
-  return request(`/items/${itemId}/metadata/${attributeId}`, {
+  return request(`/item/${itemId}/metadata/${attributeId}`, {
     method: 'DELETE',
   });
 }
@@ -125,4 +125,24 @@ export function setSetting(key, value) {
     method: 'PUT',
     body: JSON.stringify({ value }),
   });
+}
+
+// ── Inventory Import/Export ────────────────────────────────────────
+
+export function exportInventoryUrl(format = 'json') {
+  return `${API_BASE}/inventory/export?format=${encodeURIComponent(format)}`;
+}
+
+export async function importInventory(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`${API_BASE}/inventory/import`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || res.statusText);
+  }
+  return res.json();
 }

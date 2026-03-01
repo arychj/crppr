@@ -45,8 +45,8 @@ def test_reorder_metadata_attributes(client):
 
 def test_delete_metadata_attribute(client):
     attr = client.post("/api/metadata-attributes/", json={"name": "Temp"}).json()
-    item = client.post("/api/items", json={"ident": "DEL1"}).json()
-    client.post(f"/api/items/{item['id']}/metadata", json=[{"attribute_id": attr["id"], "value": "x"}])
+    item = client.post("/api/item", json={"ident": "DEL1"}).json()
+    client.post(f"/api/item/{item['id']}/metadata", json=[{"attribute_id": attr["id"], "value": "x"}])
     r = client.delete(f"/api/metadata-attributes/{attr['id']}")
     assert r.status_code == 204
     # Attribute is gone
@@ -55,11 +55,11 @@ def test_delete_metadata_attribute(client):
 
 
 def test_set_item_metadata(client):
-    item = client.post("/api/items", json={"ident": "M1"}).json()
+    item = client.post("/api/item", json={"ident": "M1"}).json()
     attr = client.post("/api/metadata-attributes/", json={"name": "Weight"}).json()
 
     r = client.post(
-        f"/api/items/{item['id']}/metadata",
+        f"/api/item/{item['id']}/metadata",
         json=[{"attribute_id": attr["id"], "value": "5kg"}],
     )
     assert r.status_code == 200
@@ -70,17 +70,17 @@ def test_set_item_metadata(client):
 
 
 def test_update_existing_metadata(client):
-    item = client.post("/api/items", json={"ident": "M2"}).json()
+    item = client.post("/api/item", json={"ident": "M2"}).json()
     attr = client.post("/api/metadata-attributes/", json={"name": "Color"}).json()
 
     # Set initial value
     client.post(
-        f"/api/items/{item['id']}/metadata",
+        f"/api/item/{item['id']}/metadata",
         json=[{"attribute_id": attr["id"], "value": "red"}],
     )
     # Update value
     r = client.post(
-        f"/api/items/{item['id']}/metadata",
+        f"/api/item/{item['id']}/metadata",
         json=[{"attribute_id": attr["id"], "value": "blue"}],
     )
     assert r.json()[0]["value"] == "blue"
@@ -89,30 +89,30 @@ def test_update_existing_metadata(client):
 def test_metadata_on_nonexistent_item(client):
     attr = client.post("/api/metadata-attributes/", json={"name": "Stuff"}).json()
     r = client.post(
-        "/api/items/99999/metadata",
+        "/api/item/99999/metadata",
         json=[{"attribute_id": attr["id"], "value": "x"}],
     )
     assert r.status_code == 404
 
 
 def test_metadata_with_nonexistent_attribute(client):
-    item = client.post("/api/items", json={"ident": "M3"}).json()
+    item = client.post("/api/item", json={"ident": "M3"}).json()
     r = client.post(
-        f"/api/items/{item['id']}/metadata",
+        f"/api/item/{item['id']}/metadata",
         json=[{"attribute_id": 99999, "value": "x"}],
     )
     assert r.status_code == 404
 
 
 def test_item_detail_includes_metadata(client):
-    item = client.post("/api/items", json={"ident": "M4"}).json()
+    item = client.post("/api/item", json={"ident": "M4"}).json()
     attr = client.post("/api/metadata-attributes/", json={"name": "Brand"}).json()
     client.post(
-        f"/api/items/{item['id']}/metadata",
+        f"/api/item/{item['id']}/metadata",
         json=[{"attribute_id": attr["id"], "value": "Acme"}],
     )
 
-    r = client.get(f"/api/items/{item['id']}")
+    r = client.get(f"/api/item/{item['id']}")
     meta = r.json()["metadata"]
     assert len(meta) == 1
     assert meta[0]["attribute_name"] == "Brand"

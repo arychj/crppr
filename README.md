@@ -1,14 +1,75 @@
 # crppr
 
-A recursive home inventory PWA. Every object is an **Item**; a **Container** is simply an Item that has children.
+<p align="center">
+  <img src="frontend/public/crppr-dark.svg" alt="crppr logo" />
+</p>
 
-## Stack
+**WARNING:** This project has been on my todo list for years and I'm finally getting around to doing something about it. This is completely vibe coded, I knocked it out in less than a day, and I haven't reviewed any of the code. Keep proper backups, don't use this for anything truly important, if something breaks you get to keep both pieces. You've been warned.
 
-| Layer    | Tech                                        |
-| -------- | ------------------------------------------- |
-| Backend  | FastAPI · SQLAlchemy 2.0 · Alembic · Pydantic |
-| Frontend | React (Vite) · Tailwind CSS · QR scanner    |
-| Database | SQLite (default) · PostgreSQL (optional)     |
+## What is crppr?
+
+crppr is a self-hosted, recursive home inventory system built as a progressive web app (PWA). It helps you track where everything in your home (or office, workshop, storage unit…) actually _is_ by modelling the real-world nesting of physical spaces and objects.
+
+### Containers & Items
+
+The only concept you need to understand is the **Item**. Every object you track — a room, a shelf, a drawer, a book, a pair of scissors — is an Item. An Item becomes a **Container** the moment you put other Items inside it. That's it. There is no separate "container" type; any Item can hold children, and children can hold children, as deep as you like.
+
+This recursive relationship mirrors how the physical world actually works:
+
+```
+House
+ └── Garage
+      └── Workbench
+           └── Top Drawer
+                ├── Screwdriver Set
+                ├── Flashlight
+                └── Box of Nails
+```
+
+Every Item in that tree is the same kind of thing. "Garage" is a Container because it has children. "Flashlight" is a leaf because it doesn't — but you _could_ open it up and track the individual batteries inside if you wanted to.
+
+### Identifiers & QR Codes
+
+Each Item gets a short, unique **ident** (e.g. `0042` or `A7F3`) that you can print as a QR code label and stick on the physical object. Scanning a label with your phone instantly opens that item in the app — so you can see what's inside a box without opening it, or figure out where something belongs.
+
+### Metadata
+
+Items can carry arbitrary **metadata** as key-value pairs (an "Entity-Attribute-Value" model). You define the attributes once — "color", "brand", "purchase date", "serial number", whatever makes sense — and then attach values on a per-item basis. This keeps the core data model clean while letting you track whatever extra information matters to you.
+
+### Examples
+
+**Tracking a kitchen:**
+
+| Ident | Name | Parent | Metadata |
+| ----- | ---- | ------ | -------- |
+| 0001 | Kitchen | — | floor: 1 |
+| 0002 | Pantry | Kitchen | |
+| 0003 | Top Shelf | Pantry | |
+| 0004 | Canned Tomatoes (6-pack) | Top Shelf | brand: Mutti, expiry: 2026-09 |
+| 0005 | Junk Drawer | Kitchen | |
+| 0006 | Rubber Bands | Junk Drawer | color: assorted |
+| 0007 | Takeout Menus | Junk Drawer | |
+
+**Tracking a garage workshop:**
+
+| Ident | Name | Parent | Metadata |
+| ----- | ---- | ------ | -------- |
+| 0010 | Garage | — | |
+| 0011 | Tool Pegboard | Garage | |
+| 0012 | Cordless Drill | Tool Pegboard | brand: DeWalt, model: DCD771 |
+| 0013 | Parts Cabinet | Garage | material: steel |
+| 0014 | Drawer A | Parts Cabinet | label: Screws |
+| 0015 | #8 × 1¼″ Wood Screws | Drawer A | qty: ~200 |
+
+You can nest as deep as you need (`House → Garage → Parts Cabinet → Drawer A → bag of screws`) or keep things flat — the hierarchy adapts to however you think about your stuff.
+
+### Import & Export
+
+Your data is yours. crppr can export the entire inventory as **JSON** or **CSV** (with all metadata and parent relationships intact) and import it back. The CSV format keeps metadata in a single cell as `key: value` lines, so it stays readable in any spreadsheet app.
+
+## API Docs
+
+FastAPI auto-generates interactive API documentation at `/api/docs` (Swagger UI) and `/api/redoc` (ReDoc).
 
 ## Quick Start
 
@@ -51,38 +112,6 @@ docker compose up -d
 This starts PostgreSQL and the backend+frontend on `http://localhost:8000`.
 Credentials are read from `.env` (see `.env` for defaults).
 
-## API Docs
-
-FastAPI provides auto-generated interactive docs:
-
-- **Swagger UI:** `http://localhost:8000/docs`
-- **ReDoc:** `http://localhost:8000/redoc`
-- **OpenAPI JSON:** `http://localhost:8000/openapi.json`
-
-## API Endpoints
-
-| Method | Path                                      | Description                           |
-| ------ | ----------------------------------------- | ------------------------------------- |
-| GET    | `/health`                                 | Health check                          |
-| GET    | `/a/{ident}`                              | Lookup by ident → redirect to item    |
-| GET    | `/items`                                  | List root items                       |
-| GET    | `/items/search?q=`                        | Search items by name/ident/desc/meta  |
-| GET    | `/items/{id}`                             | Get item with metadata and children   |
-| POST   | `/items`                                  | Create item (auto-ident if omitted)   |
-| PATCH  | `/items/{id}`                             | Update item (triggers address recalc) |
-| GET    | `/items/{id}/path`                        | Breadcrumb trail                      |
-| PUT    | `/items/{id}/image`                       | Image upload (stub)                   |
-| POST   | `/items/{id}/metadata`                    | Set metadata values                   |
-| DELETE | `/items/{id}/metadata/{attribute_id}`     | Remove a metadata value               |
-| GET    | `/metadata-attributes/`                   | List metadata attributes              |
-| POST   | `/metadata-attributes/`                   | Create metadata attribute             |
-| PUT    | `/metadata-attributes/reorder`            | Reorder attributes (drag-and-drop)    |
-| DELETE | `/metadata-attributes/{id}`               | Delete attribute + cascade values     |
-| POST   | `/ident/generate`                         | Generate next available ident         |
-| GET    | `/settings/`                              | List all settings                     |
-| GET    | `/settings/{key}`                         | Get a setting                         |
-| PUT    | `/settings/{key}`                         | Set a setting                         |
-
 ## Tests
 
 Run the full test suite in Docker:
@@ -96,52 +125,4 @@ Other Make targets:
 ```bash
 make up      # docker compose up -d
 make down    # docker compose down
-```
-
-## Project Structure
-
-```
-├── backend/
-│   ├── alembic/               # Database migrations
-│   │   ├── env.py
-│   │   └── versions/          # Migration scripts
-│   ├── api/
-│   │   ├── config.py          # Settings (DB_TYPE, DB_HOST, etc.)
-│   │   ├── database.py        # Engine + session (SQLite/Postgres)
-│   │   ├── main.py            # FastAPI app, Alembic startup, SPA serving
-│   │   ├── models.py          # Item, MetadataAttribute, MetadataValue, Setting
-│   │   ├── schemas.py         # Pydantic request/response models
-│   │   ├── routers/
-│   │   │   ├── items.py       # Item CRUD, search, breadcrumbs, metadata values
-│   │   │   ├── metadata.py    # Metadata attribute CRUD + reorder
-│   │   │   ├── ident.py       # Ident generation
-│   │   │   └── settings.py    # Application settings
-│   │   └── services/
-│   │       ├── address.py     # Materialized path recalculation
-│   │       └── ident.py       # Next-available-ident logic
-│   ├── tests/
-│   │   ├── conftest.py        # Test fixtures (Alembic + SQLite test DB)
-│   │   ├── test_items.py      # Item CRUD, move, breadcrumb, metadata tests
-│   │   ├── test_metadata.py   # Metadata attribute + EAV value tests
-│   │   ├── test_ident.py      # Ident generator tests
-│   │   ├── test_search.py     # Search endpoint tests
-│   │   └── test_openapi.py    # OpenAPI schema test
-│   └── requirements.txt
-├── frontend/
-│   └── src/
-│       ├── api.js             # API client
-│       ├── App.jsx            # Router
-│       ├── components/        # Layout, SideMenu, BreadcrumbNav, ItemTree,
-│       │                      # EAVEditor, MetadataKeyInput, QRScanner,
-│       │                      # IdentGenerator, SearchBar, Toast, ConfirmModal,
-│       │                      # ItemPickerModal
-│       ├── hooks/             # useTheme, useDrawer, useDocTitle
-│       └── pages/             # HomePage, ItemDetailPage, CreateItemPage,
-│                              # InventoryPage, MetadataPage, SettingsPage,
-│                              # LookupPage, IdentPage
-├── .env                       # Database config (used by docker-compose + backend)
-├── Dockerfile                 # Multi-stage production build
-├── Dockerfile.test            # Test runner
-├── docker-compose.yaml        # PostgreSQL + backend
-└── Makefile
 ```

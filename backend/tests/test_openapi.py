@@ -7,5 +7,5 @@ def test_openapi_json(client):
     schema = r.json()
     assert schema["info"]["title"] == "crppr"
     assert schema["info"]["version"] == "0.1.0"
-    assert "/api/items" in schema["paths"]
+    assert "/api/item" in schema["paths"]
     assert "/api/health" in schema["paths"]

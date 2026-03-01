@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
@@ -64,27 +63,17 @@ def _item_to_out(item: Item) -> ItemOut:
     )
 
 
-# ── GET /a/{ident}  — primary lookup by ident ───────────────────────
+# ── GET /item  — list root items (no parent) ───────────────────────
 
-@router.get("/a/{ident}")
-def lookup_by_ident(ident: str, db: Session = Depends(get_db)):
-    item = db.query(Item).filter(Item.ident == ident).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return RedirectResponse(url=f"/api/items/{item.id}", status_code=307)
-
-
-# ── GET /items  — list root items (no parent) ───────────────────────
-
-@router.get("/items", response_model=list[ItemOut])
+@router.get("/item", response_model=list[ItemOut])
 def list_items(db: Session = Depends(get_db)):
     items = db.query(Item).filter(Item.parent_id.is_(None)).all()
     return [_item_to_out(i) for i in items]
 
 
-# ── GET /items/recent  — last 10 viewed items ───────────────────────
+# ── GET /item/recent  — last 10 viewed items ───────────────────────
 
-@router.get("/items/recent", response_model=list[ItemOut])
+@router.get("/item/recent", response_model=list[ItemOut])
 def recent_items(db: Session = Depends(get_db)):
     items = (
         db.query(Item)
@@ -96,10 +85,10 @@ def recent_items(db: Session = Depends(get_db)):
     return [_item_to_out(i) for i in items]
 
 
-# ── GET /items/search  — full-text search across all fields ─────────
-# NOTE: Must be defined BEFORE /items/{item_id} to avoid path conflict.
+# ── GET /item/search  — full-text search across all fields ─────────
+# NOTE: Must be defined BEFORE /item/{item_id} to avoid path conflict.
 
-@router.get("/items/search", response_model=list[ItemOut])
+@router.get("/item/search", response_model=list[ItemOut])
 def search_items(
     q: str = Query(..., min_length=1, description="Search query"),
     db: Session = Depends(get_db),
@@ -133,9 +122,9 @@ def search_items(
     return [_item_to_out(i) for i in items]
 
 
-# ── GET /items/{id} ─────────────────────────────────────────────────
+# ── GET /item/{id} ─────────────────────────────────────────────────
 
-@router.get("/items/{item_id}", response_model=ItemOut)
+@router.get("/item/{item_id}", response_model=ItemOut)
 def get_item(item_id: int, db: Session = Depends(get_db)):
     item = db.get(Item, item_id)
     if not item:
@@ -147,9 +136,9 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
     return _item_to_out(item)
 
 
-# ── POST /items ─────────────────────────────────────────────────────
+# ── POST /item ─────────────────────────────────────────────────────
 
-@router.post("/items", response_model=ItemOut, status_code=201)
+@router.post("/item", response_model=ItemOut, status_code=201)
 def create_item(body: ItemCreate, db: Session = Depends(get_db)):
     ident = body.ident
     if not ident:
@@ -189,9 +178,9 @@ def create_item(body: ItemCreate, db: Session = Depends(get_db)):
     return _item_to_out(item)
 
 
-# ── PATCH /items/{id} ───────────────────────────────────────────────
+# ── PATCH /item/{id} ───────────────────────────────────────────────
 
-@router.patch("/items/{item_id}", response_model=ItemOut)
+@router.patch("/item/{item_id}", response_model=ItemOut)
 def update_item(item_id: int, body: ItemUpdate, db: Session = Depends(get_db)):
     item = db.get(Item, item_id)
     if not item:
@@ -231,9 +220,9 @@ def update_item(item_id: int, body: ItemUpdate, db: Session = Depends(get_db)):
     return _item_to_out(item)
 
 
-# ── GET /items/{id}/path  — breadcrumb trail ────────────────────────
+# ── GET /item/{id}/path  — breadcrumb trail ────────────────────────
 
-@router.get("/items/{item_id}/path", response_model=list[BreadcrumbSegment])
+@router.get("/item/{item_id}/path", response_model=list[BreadcrumbSegment])
 def get_item_path(item_id: int, db: Session = Depends(get_db)):
     item = db.get(Item, item_id)
     if not item:
@@ -252,14 +241,14 @@ def get_item_path(item_id: int, db: Session = Depends(get_db)):
     return breadcrumbs
 
 
-# ── PUT /items/{id}/image  — stub ───────────────────────────────────
+# ── PUT /item/{id}/image  — stub ───────────────────────────────────
 
-@router.put("/items/{item_id}/image")
+@router.put("/item/{item_id}/image")
 def upload_image(item_id: int):
     return {"status": "not_implemented"}
 
 
-# ── POST /items/{id}/metadata  — set metadata values ────────────────
+# ── POST /item/{id}/metadata  — set metadata values ────────────────
 
 def _apply_metadata_by_key(db: Session, item_id: int, entries: list[MetadataValueCreate]):
     """Resolve key names to attribute IDs (creating if needed) and upsert values."""
@@ -281,7 +270,7 @@ def _apply_metadata_by_key(db: Session, item_id: int, entries: list[MetadataValu
             db.add(MetadataValue(item_id=item_id, attribute_id=attr.id, value=entry.value))
 
 
-@router.post("/items/{item_id}/metadata", response_model=list[MetadataValueOut])
+@router.post("/item/{item_id}/metadata", response_model=list[MetadataValueOut])
 def set_metadata(item_id: int, values: list[MetadataValueSet], db: Session = Depends(get_db)):
     item = db.get(Item, item_id)
     if not item:
@@ -312,9 +301,9 @@ def set_metadata(item_id: int, values: list[MetadataValueSet], db: Session = Dep
     return results
 
 
-# ── DELETE /items/{id}/metadata/{attr_id}  — remove a metadata value ─
+# ── DELETE /item/{id}/metadata/{attr_id}  — remove a metadata value ─
 
-@router.delete("/items/{item_id}/metadata/{attribute_id}", status_code=204)
+@router.delete("/item/{item_id}/metadata/{attribute_id}", status_code=204)
 def delete_metadata_value(item_id: int, attribute_id: int, db: Session = Depends(get_db)):
     item = db.get(Item, item_id)
     if not item:

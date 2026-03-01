@@ -12,6 +12,7 @@ import IdentPage from './pages/IdentPage';
 import SettingsPage from './pages/SettingsPage';
 import LookupPage from './pages/LookupPage';
 import MetadataPage from './pages/MetadataPage';
+import ImportExportPage from './pages/ImportExportPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
 
                 <Route path="/ident" element={<IdentPage />} />
                 <Route path="/metadata" element={<MetadataPage />} />
+                <Route path="/import-export" element={<ImportExportPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>

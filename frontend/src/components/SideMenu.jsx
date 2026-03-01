@@ -15,6 +15,7 @@ import {
   mdiPound,
   mdiWeatherSunny,
   mdiWeatherNight,
+  mdiSwapVertical,
   mdiCog,
   mdiClose,
 } from '@mdi/js';
@@ -70,6 +71,7 @@ export default function SideMenu() {
     { to: '/inventory', label: 'Browse Inventory', icon: mdiPackageVariantClosed },
     { to: '/metadata', label: 'Metadata Manager', icon: mdiTag },
     { to: '/ident', label: 'Label Generator', icon: mdiPound },
+    { to: '/import-export', label: 'Import / Export', icon: mdiSwapVertical },
   ];
 
   // Close sidebar on mobile when navigating
