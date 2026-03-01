@@ -2,11 +2,14 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { getItem, getItemPath, updateItem, getSetting } from '../api';
 import moment from 'moment';
+import Icon from '@mdi/react';
+import { mdiMapMarkerOutline, mdiLink, mdiClockEditOutline } from '@mdi/js';
 import BreadcrumbNav from '../components/BreadcrumbNav';
 import EAVEditor from '../components/EAVEditor';
 import ItemPickerModal from '../components/ItemPickerModal';
 import ConfirmModal from '../components/ConfirmModal';
 import QRCodeStyled from '../components/QRCodeStyled';
+import InfoModal from '../components/InfoModal';
 import { useToast } from '../components/Toast';
 import useDocTitle from '../hooks/useDocTitle';
 
@@ -34,6 +37,7 @@ export default function ItemDetailPage() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [confirmConvert, setConfirmConvert] = useState(false);
   const [baseUrl, setBaseUrl] = useState('');
+  const [infoModal, setInfoModal] = useState({ open: false, title: '', value: '' });
 
   const reload = useCallback(() => {
     setLoading(true);
@@ -161,8 +165,8 @@ export default function ItemDetailPage() {
       <div className="flex gap-4 items-stretch">
         {/* ────────── Header (details box) ────────── */}
         <div ref={detailsBoxRef} className="flex-1 min-w-0 bg-white dark:bg-gray-800 rounded shadow p-5 flex flex-col">
-        {/* Top row: name/description left, ident/address/timestamp right (stacks on mobile) */}
-        <div className="flex flex-col md:flex-row md:gap-6">
+        {/* Top row: name/description left, ident/address/timestamp right */}
+        <div className="flex gap-6">
           {/* Left: name + description */}
           <div className="flex-1 min-w-0 space-y-2">
             {/* Click-to-edit name */}
@@ -210,35 +214,71 @@ export default function ItemDetailPage() {
           </div>
 
           {/* Right: ident + URL + address + last updated */}
-          <div className="flex flex-col items-start md:items-end gap-1 shrink-0 mt-2 md:mt-0">
+          <div className="flex flex-col items-end gap-1 shrink-0">
             <span className="font-mono text-sm text-gray-500 dark:text-gray-400">{item.ident}</span>
-            {baseUrl && (
-              <a
-                href={`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-xs text-gray-400 dark:text-gray-500 no-underline hover:underline truncate max-w-[18rem]"
-                title={`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
-              >
-                {`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
-              </a>
-            )}
-            <span className="font-mono text-xs text-gray-400 dark:text-gray-500">
-              {(() => {
-                const parts = item.address.split('.');
-                if (parts.length <= 1) return <span className="underline decoration-gray-400">{item.address}</span>;
-                return (
-                  <>
-                    {parts.slice(0, -1).join('.')}.<span className="underline decoration-gray-400">{parts[parts.length - 1]}</span>
-                  </>
-                );
-              })()}
-            </span>
-            {item.last_updated && (
-              <span className="text-xs text-gray-400 dark:text-gray-500" title={new Date(item.last_updated).toLocaleString()}>
-                {moment(item.last_updated).fromNow()}
+
+            {/* Desktop: full text rows */}
+            <div className="hidden md:flex flex-col items-end gap-1">
+              {baseUrl && (
+                <a
+                  href={`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs text-gray-400 dark:text-gray-500 no-underline hover:underline truncate max-w-[18rem]"
+                  title={`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
+                >
+                  {`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
+                </a>
+              )}
+              <span className="font-mono text-xs text-gray-400 dark:text-gray-500">
+                {(() => {
+                  const parts = item.address.split('.');
+                  if (parts.length <= 1) return <span className="underline decoration-gray-400">{item.address}</span>;
+                  return (
+                    <>
+                      {parts.slice(0, -1).join('.')}.<span className="underline decoration-gray-400">{parts[parts.length - 1]}</span>
+                    </>
+                  );
+                })()}
               </span>
-            )}
+              {item.last_updated && (
+                <span className="text-xs text-gray-400 dark:text-gray-500" title={new Date(item.last_updated).toLocaleString()}>
+                  {moment(item.last_updated).fromNow()}
+                </span>
+              )}
+            </div>
+
+            {/* Mobile: icon column */}
+            <div className="flex md:hidden flex-col items-end gap-1 mt-1">
+              {baseUrl && (
+                <button
+                  type="button"
+                  onClick={() => setInfoModal({ open: true, title: 'URI', value: `${baseUrl.replace(/\/$/, '')}/-/${item.ident}` })}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 dark:text-gray-500"
+                  aria-label="Show URI"
+                >
+                  <Icon path={mdiLink} size={0.85} />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setInfoModal({ open: true, title: 'Address', value: item.address })}
+                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 dark:text-gray-500"
+                aria-label="Show address"
+              >
+                <Icon path={mdiMapMarkerOutline} size={0.85} />
+              </button>
+              {item.last_updated && (
+                <button
+                  type="button"
+                  onClick={() => setInfoModal({ open: true, title: 'Last Updated', value: new Date(item.last_updated).toLocaleString() })}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 dark:text-gray-500"
+                  aria-label="Show last updated"
+                >
+                  <Icon path={mdiClockEditOutline} size={0.85} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -380,6 +420,15 @@ export default function ItemDetailPage() {
         onConfirm={handleConvert}
         onCancel={() => setConfirmConvert(false)}
         variant="warning"
+      />
+
+      {/* ────────── Mobile info modal ────────── */}
+      <InfoModal
+        open={infoModal.open}
+        onClose={() => setInfoModal({ open: false, title: '', value: '' })}
+        title={infoModal.title}
+        value={infoModal.value}
+        onCopy={() => toast('Copied to clipboard')}
       />
     </div>
   );

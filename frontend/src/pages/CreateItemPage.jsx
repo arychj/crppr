@@ -16,6 +16,7 @@ export default function CreateItemPage() {
   const [parentId, setParentId] = useState(searchParams.get('parent') || '');
   const [parentLabel, setParentLabel] = useState('');
   const [parentPickerOpen, setParentPickerOpen] = useState(false);
+  const [clonePickerOpen, setClonePickerOpen] = useState(false);
   const [metaRows, setMetaRows] = useState([]);   // { key, value }
   const [newMetaKey, setNewMetaKey] = useState('');
   const [newMetaValue, setNewMetaValue] = useState('');
@@ -32,6 +33,25 @@ export default function CreateItemPage() {
         .catch(() => setParentLabel(`ID ${parentId}`));
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Clone handler ───────────────────────────────────────────────
+  const handleClone = async (selected) => {
+    setClonePickerOpen(false);
+    try {
+      const full = await getItem(selected.id);
+      setName(full.name || '');
+      setDescription(full.description || '');
+      setIsContainer(full.is_container);
+      setMetaRows(
+        (full.metadata || []).map((m) => ({ key: m.attribute_name, value: m.value || '' }))
+      );
+      setNewMetaKey('');
+      setNewMetaValue('');
+      toast('Fields copied from "' + (full.name || full.ident) + '"');
+    } catch (err) {
+      toast(`Clone failed: ${err.message}`, 'error');
+    }
+  };
 
   // ── Metadata row helpers ────────────────────────────────────────
   const removeMetaRow = (idx) => setMetaRows((prev) => prev.filter((_, i) => i !== idx));
@@ -65,7 +85,23 @@ export default function CreateItemPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">New Item</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">New Item</h1>
+        <button
+          type="button"
+          onClick={() => setClonePickerOpen(true)}
+          className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+        >
+          Clone
+        </button>
+      </div>
+
+      <ItemPickerModal
+        open={clonePickerOpen}
+        onClose={() => setClonePickerOpen(false)}
+        title="Clone from item"
+        onSelect={handleClone}
+      />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
