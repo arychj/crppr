@@ -95,19 +95,16 @@ def _import_items(db: Session, records: list[dict]) -> dict:
 
     # Pass 1: create new items, skip existing
     for rec in records:
-        ident = rec.get("ident")
-        if not ident:
-            skipped += 1
-            skipped_idents.append("(no ident)")
-            continue
+        ident = rec.get("ident") or None  # normalise empty string to None
 
-        item = db.query(Item).filter(Item.ident == ident).first()
-        if item:
-            # Already exists — skip
-            skipped += 1
-            skipped_idents.append(ident)
-            ident_map[ident] = item
-            continue
+        if ident:
+            item = db.query(Item).filter(Item.ident == ident).first()
+            if item:
+                # Already exists — skip
+                skipped += 1
+                skipped_idents.append(ident)
+                ident_map[ident] = item
+                continue
 
         item = Item(
             ident=ident,
@@ -129,12 +126,13 @@ def _import_items(db: Session, records: list[dict]) -> dict:
             attr = _resolve_or_create_attr(db, key)
             db.add(MetadataValue(item_id=item.id, attribute_id=attr.id, value=value))
 
-        ident_map[ident] = item
+        if ident:
+            ident_map[ident] = item
 
     # Pass 2: wire parent relationships by ident (only for newly created items)
     for rec in records:
-        ident = rec.get("ident")
-        parent_ident = rec.get("parent_ident")
+        ident = rec.get("ident") or None
+        parent_ident = rec.get("parent_ident") or None
         if not ident or ident not in ident_map:
             continue
         item = ident_map[ident]

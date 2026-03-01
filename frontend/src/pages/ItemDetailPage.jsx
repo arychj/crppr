@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { getItem, getItemPath, updateItem, getSetting } from '../api';
 import moment from 'moment';
 import Icon from '@mdi/react';
-import { mdiMapMarkerOutline, mdiLink, mdiClockEditOutline } from '@mdi/js';
+import { mdiMapMarkerOutline, mdiLink, mdiClockEditOutline, mdiGhostOutline } from '@mdi/js';
 import BreadcrumbNav from '../components/BreadcrumbNav';
 import EAVEditor from '../components/EAVEditor';
 import ItemPickerModal from '../components/ItemPickerModal';
@@ -25,10 +25,13 @@ export default function ItemDetailPage() {
   // Click-to-edit state
   const [editingName, setEditingName] = useState(false);
   const [editingDesc, setEditingDesc] = useState(false);
+  const [editingIdent, setEditingIdent] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [editIdent, setEditIdent] = useState('');
   const nameInputRef = useRef(null);
   const descInputRef = useRef(null);
+  const identInputRef = useRef(null);
   const detailsBoxRef = useRef(null);
   const [detailsBoxHeight, setDetailsBoxHeight] = useState(148);
 
@@ -48,8 +51,10 @@ export default function ItemDetailPage() {
         setBreadcrumbs(pathData);
         setEditName(itemData.name || '');
         setEditDescription(itemData.description || '');
+        setEditIdent(itemData.ident || '');
         setEditingName(false);
         setEditingDesc(false);
+        setEditingIdent(false);
       })
       .catch((err) => {
         if (err.message === 'Not Found' || err.message?.includes('not found')) {
@@ -82,7 +87,7 @@ export default function ItemDetailPage() {
   }, [item]);
 
   // Document title
-  useDocTitle(item ? (item.name || item.ident) : undefined);
+  useDocTitle(item ? (item.name || item.ident || 'Ghost') : undefined);
 
   // ── Inline field save helpers ────────────────────────────────────
   const saveField = async (field, value) => {
@@ -114,6 +119,16 @@ export default function ItemDetailPage() {
     if (editDescription !== (item.description || '')) saveField('description', editDescription);
   };
   const handleDescKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) e.target.blur(); if (e.key === 'Escape') { setEditDescription(item.description || ''); setEditingDesc(false); } };
+
+  const handleIdentClick = () => {
+    setEditingIdent(true);
+    setTimeout(() => identInputRef.current?.focus(), 0);
+  };
+  const handleIdentBlur = () => {
+    setEditingIdent(false);
+    if (editIdent !== (item.ident || '')) saveField('ident', editIdent);
+  };
+  const handleIdentKey = (e) => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') { setEditIdent(item.ident || ''); setEditingIdent(false); } };
 
   // ── Convert container ↔ item ─────────────────────────────────────
   const handleConvert = async () => {
@@ -215,11 +230,30 @@ export default function ItemDetailPage() {
 
           {/* Right: ident + URL + address + last updated */}
           <div className="flex flex-col items-end gap-1 shrink-0">
-            <span className="font-mono text-sm text-gray-500 dark:text-gray-400">{item.ident}</span>
+            {editingIdent ? (
+              <input
+                ref={identInputRef}
+                type="text"
+                value={editIdent}
+                onChange={(e) => setEditIdent(e.target.value)}
+                onBlur={handleIdentBlur}
+                onKeyDown={handleIdentKey}
+                placeholder="ghost"
+                className="font-mono text-sm text-gray-500 dark:text-gray-400 bg-transparent border-b-2 border-blue-400 focus:outline-none w-24 text-right"
+              />
+            ) : (
+              <span
+                onClick={handleIdentClick}
+                className="font-mono text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition"
+                title="Click to edit"
+              >
+                {item.ident || <span title="Ghost — this item has no ident"><Icon path={mdiGhostOutline} size={0.6} className="inline" /></span>}
+              </span>
+            )}
 
             {/* Desktop: full text rows */}
             <div className="hidden md:flex flex-col items-end gap-1">
-              {baseUrl && (
+              {baseUrl && item.ident && (
                 <a
                   href={`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
                   target="_blank"
@@ -230,17 +264,25 @@ export default function ItemDetailPage() {
                   {`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
                 </a>
               )}
-              <span className="font-mono text-xs text-gray-400 dark:text-gray-500">
+              <button
+                type="button"
+                onClick={() => setInfoModal({ open: true, title: 'Address', value: item.address })}
+                className="font-mono text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition cursor-pointer bg-transparent border-0 p-0 text-right"
+                title={item.address}
+              >
                 {(() => {
                   const parts = item.address.split('.');
+                  const maxSegments = 5;
                   if (parts.length <= 1) return <span className="underline decoration-gray-400">{item.address}</span>;
+                  const display = parts.length > maxSegments ? parts.slice(-maxSegments) : parts;
+                  const prefix = parts.length > maxSegments ? '...' : '';
                   return (
                     <>
-                      {parts.slice(0, -1).join('.')}.<span className="underline decoration-gray-400">{parts[parts.length - 1]}</span>
+                      {prefix}{display.slice(0, -1).join('.')}.<span className="underline decoration-gray-400">{display[display.length - 1]}</span>
                     </>
                   );
                 })()}
-              </span>
+              </button>
               {item.last_updated && (
                 <span className="text-xs text-gray-400 dark:text-gray-500" title={new Date(item.last_updated).toLocaleString()}>
                   {moment(item.last_updated).fromNow()}
@@ -250,7 +292,7 @@ export default function ItemDetailPage() {
 
             {/* Mobile: icon column */}
             <div className="flex md:hidden flex-col items-end gap-1 mt-1">
-              {baseUrl && (
+              {baseUrl && item.ident && (
                 <button
                   type="button"
                   onClick={() => setInfoModal({ open: true, title: 'URI', value: `${baseUrl.replace(/\/$/, '')}/-/${item.ident}` })}
@@ -288,6 +330,11 @@ export default function ItemDetailPage() {
         {/* Container tag + action buttons */}
         <div className="flex items-center justify-between pt-3 mt-2 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-2">
+            {!item.ident && (
+              <span className="text-xs bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 px-2 py-0.5 rounded-full">
+                ghost
+              </span>
+            )}
             {item.is_container && (
               <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full">
                 container
@@ -325,7 +372,7 @@ export default function ItemDetailPage() {
       </div>
 
         {/* QR code (outside details box, hidden on mobile) */}
-        {baseUrl && (
+        {baseUrl && item.ident && (
           <div className="shrink-0 self-stretch hidden md:block">
             <QRCodeStyled
               data={`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
@@ -366,11 +413,11 @@ export default function ItemDetailPage() {
                 }).map((child) => (
                   <li key={child.id}>
                     <Link
-                      to={`/ident/${child.ident}`}
+                      to={child.ident ? `/ident/${child.ident}` : `/id/${child.id}`}
                       className="flex items-center justify-between py-3 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition text-sm"
                     >
                       <div>
-                        <span className="font-mono text-gray-500 dark:text-gray-400 mr-2">{child.ident}</span>
+                        <span className="font-mono text-gray-500 dark:text-gray-400 mr-2">{child.ident || <span title="Ghost — this item has no ident"><Icon path={mdiGhostOutline} size={0.6} className="inline" /></span>}</span>
                         <span className="text-gray-800 dark:text-gray-100">{child.name || '(unnamed)'}</span>
                       </div>
                       {child.is_container && (

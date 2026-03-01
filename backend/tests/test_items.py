@@ -20,11 +20,25 @@ def test_create_item_with_ident(client):
     assert data["address"] == str(data["id"])
 
 
-def test_create_item_auto_ident(client):
-    r = client.post("/api/item", json={"name": "Auto"})
+def test_create_ghost_item(client):
+    """An item with no ident is a 'ghost' — it has an id but ident is null."""
+    r = client.post("/api/item", json={"name": "Ghost"})
     assert r.status_code == 201
     data = r.json()
-    assert data["ident"]  # should be auto-generated
+    assert data["ident"] is None
+    assert data["id"] is not None
+    assert data["name"] == "Ghost"
+
+
+def test_create_multiple_ghosts(client):
+    """Multiple ghost items (null ident) can coexist."""
+    r1 = client.post("/api/item", json={"name": "Ghost A"})
+    r2 = client.post("/api/item", json={"name": "Ghost B"})
+    assert r1.status_code == 201
+    assert r2.status_code == 201
+    assert r1.json()["ident"] is None
+    assert r2.json()["ident"] is None
+    assert r1.json()["id"] != r2.json()["id"]
 
 
 def test_create_child_item(client):
@@ -79,6 +93,61 @@ def test_update_name(client):
     r = client.patch(f"/api/item/{item['id']}", json={"name": "New"})
     assert r.status_code == 200
     assert r.json()["name"] == "New"
+
+
+def test_update_ident(client):
+    """Idents are mutable — can be changed via PATCH."""
+    item = client.post("/api/item", json={"ident": "OLD-ID", "name": "Mutable"}).json()
+    r = client.patch(f"/api/item/{item['id']}", json={"ident": "NEW-ID"})
+    assert r.status_code == 200
+    assert r.json()["ident"] == "NEW-ID"
+
+    # Old ident no longer resolves
+    assert client.get("/api/ident/OLD-ID", follow_redirects=False).status_code == 404
+    # New ident resolves
+    assert client.get("/api/ident/NEW-ID", follow_redirects=False).status_code == 307
+
+
+def test_update_ident_duplicate_rejected(client):
+    """Changing ident to one that already exists returns 409."""
+    client.post("/api/item", json={"ident": "TAKEN", "name": "First"})
+    second = client.post("/api/item", json={"ident": "FREE", "name": "Second"}).json()
+    r = client.patch(f"/api/item/{second['id']}", json={"ident": "TAKEN"})
+    assert r.status_code == 409
+
+
+def test_update_ident_same_is_ok(client):
+    """Setting ident to the same value it already has is fine."""
+    item = client.post("/api/item", json={"ident": "SAME", "name": "Stable"}).json()
+    r = client.patch(f"/api/item/{item['id']}", json={"ident": "SAME"})
+    assert r.status_code == 200
+    assert r.json()["ident"] == "SAME"
+
+
+def test_clear_ident_makes_ghost(client):
+    """Setting ident to null turns an item into a ghost."""
+    item = client.post("/api/item", json={"ident": "LIVE", "name": "Labeled"}).json()
+    assert item["ident"] == "LIVE"
+
+    r = client.patch(f"/api/item/{item['id']}", json={"ident": ""})
+    assert r.status_code == 200
+    assert r.json()["ident"] is None
+
+    # Old ident no longer resolves
+    assert client.get("/api/ident/LIVE", follow_redirects=False).status_code == 404
+
+
+def test_assign_ident_to_ghost(client):
+    """A ghost can be given an ident, making it findable by label."""
+    ghost = client.post("/api/item", json={"name": "Unlabeled"}).json()
+    assert ghost["ident"] is None
+
+    r = client.patch(f"/api/item/{ghost['id']}", json={"ident": "NOW-LABELED"})
+    assert r.status_code == 200
+    assert r.json()["ident"] == "NOW-LABELED"
+
+    # New ident resolves
+    assert client.get("/api/ident/NOW-LABELED", follow_redirects=False).status_code == 307
 
 
 def test_move_item_updates_address(client):

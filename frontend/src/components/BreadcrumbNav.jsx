@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Icon from '@mdi/react';
+import { mdiGhostOutline } from '@mdi/js';
 import { getSetting } from '../api';
 
 export default function BreadcrumbNav({ segments = [] }) {
@@ -23,11 +25,11 @@ export default function BreadcrumbNav({ segments = [] }) {
           <span>/</span>
           {i === segments.length - 1 ? (
             <span className="text-gray-900 dark:text-gray-100 font-semibold">
-              {seg.name || seg.ident}
+              {seg.name || seg.ident || <span title="Ghost — this item has no ident"><Icon path={mdiGhostOutline} size={0.6} className="inline" /></span>}
             </span>
           ) : (
-            <Link to={`/ident/${seg.ident}`} className="hover:text-blue-600 dark:hover:text-blue-400">
-              {seg.name || seg.ident}
+            <Link to={seg.ident ? `/ident/${seg.ident}` : `/id/${seg.id}`} className="hover:text-blue-600 dark:hover:text-blue-400">
+              {seg.name || seg.ident || <span title="Ghost — this item has no ident"><Icon path={mdiGhostOutline} size={0.6} className="inline" /></span>}
             </Link>
           )}
         </span>

@@ -4,7 +4,7 @@
   <img src="frontend/public/crppr-dark.svg" alt="crppr logo" />
 </p>
 
-**WARNING:** This project has been on my todo list for years and I'm finally getting around to doing something about it. This is completely vibe coded, I knocked it out in less than a day, and I haven't reviewed any of the code. Keep proper backups, don't use this for anything truly important, if something breaks you get to keep both pieces. You've been warned.
+> **WARNING:** This project has been on my todo list for years and I'm finally getting around to doing something about it. This is completely vibe coded, I knocked it out in less than a day, and I haven't reviewed any of the code. Keep proper backups, don't use this for anything truly important, if something breaks you get to keep both pieces. You've been warned.
 
 ## What is crppr?
 
@@ -30,7 +30,15 @@ Every Item in that tree is the same kind of thing. "Garage" is a Container becau
 
 ### Identifiers & QR Codes
 
-Each Item gets a short, unique **ident** (e.g. `0042` or `A7F3`) that you can print as a QR code label and stick on the physical object. Scanning a label with your phone instantly opens that item in the app — so you can see what's inside a box without opening it, or figure out where something belongs.
+Each Item can have a short, unique **ident** (e.g. `0042` or `A7F3`) that you can print as a QR code label and stick on the physical object. Scanning a label with your phone instantly opens that item in the app — so you can see what's inside a box without opening it, or figure out where something belongs.
+
+Idents are mutable — you can change, assign, or remove them at any time.
+
+### Ghosts
+
+Not everything needs a label. A **ghost** is an item with no ident — it exists in the inventory but doesn't have a QR code or scannable label attached to it. Ghosts are perfect for things that aren't worth printing a label for but are still useful to know about: the bag of rubber bands in the junk drawer, the spare batteries in the flashlight, or that one HDMI cable you _know_ is in here somewhere.
+
+Ghost items show up in the app with a ᗣ icon in place of the ident. You can promote a ghost to a labeled item at any time by assigning an ident, or demote a labeled item to a ghost by clearing its ident. Any number of ghost items can coexist — uniqueness only applies to non-null idents.
 
 ### Metadata
 
@@ -45,21 +53,21 @@ Items can carry arbitrary **metadata** as key-value pairs (an "Entity-Attribute-
 | 0001 | Kitchen | — | floor: 1 |
 | 0002 | Pantry | Kitchen | |
 | 0003 | Top Shelf | Pantry | |
-| 0004 | Canned Tomatoes (6-pack) | Top Shelf | brand: Mutti, expiry: 2026-09 |
+| ᗣ | Canned Tomatoes (6-pack) | Top Shelf | brand: Mutti, expiry: 2026-09 |
 | 0005 | Junk Drawer | Kitchen | |
-| 0006 | Rubber Bands | Junk Drawer | color: assorted |
-| 0007 | Takeout Menus | Junk Drawer | |
+| ᗣ | Rubber Bands | Junk Drawer | color: assorted |
+| ᗣ | Takeout Menus | Junk Drawer | |
 
 **Tracking a garage workshop:**
 
 | Ident | Name | Parent | Metadata |
 | ----- | ---- | ------ | -------- |
-| 0010 | Garage | — | |
-| 0011 | Tool Pegboard | Garage | |
-| 0012 | Cordless Drill | Tool Pegboard | brand: DeWalt, model: DCD771 |
-| 0013 | Parts Cabinet | Garage | material: steel |
+| ae10 | Garage | — | |
+| 3412 | Tool Pegboard | Garage | |
+| 2de6 | Cordless Drill | Tool Pegboard | brand: DeWalt, model: DCD771 |
+| a123 | Parts Cabinet | Garage | material: steel |
 | 0014 | Drawer A | Parts Cabinet | label: Screws |
-| 0015 | #8 × 1¼″ Wood Screws | Drawer A | qty: ~200 |
+| ᗣ | #8 × 1¼″ Wood Screws | Drawer A | qty: ~200 |
 
 You can nest as deep as you need (`House → Garage → Parts Cabinet → Drawer A → bag of screws`) or keep things flat — the hierarchy adapts to however you think about your stuff.
 
@@ -69,7 +77,7 @@ Your data is yours. crppr can export the entire inventory as **JSON** or **CSV**
 
 ## API Docs
 
-FastAPI auto-generates interactive API documentation at `/api/docs` (Swagger UI) and `/api/redoc` (ReDoc).
+FastAPI auto-generates interactive API documentation at `/api/docs` (Swagger UI).
 
 ## Quick Start
 

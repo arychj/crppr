@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import Icon from '@mdi/react';
+import { mdiGhostOutline } from '@mdi/js';
 import { searchItems } from '../api';
 
 /**
@@ -109,7 +111,7 @@ export default function ItemPickerModal({
                 onClick={() => { onSelect(item); onClose(); }}
                 className="w-full flex items-center gap-2 px-5 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition text-left border-b dark:border-gray-700 last:border-b-0"
               >
-                <span className="font-mono text-gray-500 dark:text-gray-400 flex-shrink-0">{item.ident}</span>
+                <span className="font-mono text-gray-500 dark:text-gray-400 flex-shrink-0">{item.ident || <span title="Ghost — this item has no ident"><Icon path={mdiGhostOutline} size={0.6} className="inline" /></span>}</span>
                 <span className="text-gray-800 dark:text-gray-100 truncate">{item.name || '(unnamed)'}</span>
                 {item.is_container && (
                   <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex-shrink-0">

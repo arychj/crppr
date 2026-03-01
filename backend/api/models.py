@@ -20,7 +20,7 @@ class Item(Base):
     __tablename__ = "items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ident = Column(String(64), unique=True, nullable=False, index=True)
+    ident = Column(String(64), unique=True, nullable=True, index=True)
     name = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
     parent_id = Column(Integer, ForeignKey("items.id", ondelete="SET NULL"), nullable=True)

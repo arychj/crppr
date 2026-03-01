@@ -47,7 +47,7 @@ export default function CreateItemPage() {
       );
       setNewMetaKey('');
       setNewMetaValue('');
-      toast('Fields copied from "' + (full.name || full.ident) + '"');
+      toast('Fields copied from "' + (full.name || full.ident || 'Ghost') + '"');
     } catch (err) {
       toast(`Clone failed: ${err.message}`, 'error');
     }
@@ -74,8 +74,8 @@ export default function CreateItemPage() {
         metadata,
       };
       const item = await createItem(data);
-      toast(`"${item.name || item.ident}" created`);
-      navigate(`/ident/${item.ident}`);
+      toast(`"${item.name || item.ident || 'Ghost'}" created`);
+      navigate(item.ident ? `/ident/${item.ident}` : `/id/${item.id}`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -113,7 +113,7 @@ export default function CreateItemPage() {
                 type="text"
                 value={ident}
                 onChange={(e) => setIdent(e.target.value)}
-                placeholder="Leave blank to auto-generate"
+                placeholder="Leave blank for a ghost"
                 className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
               />
             </label>

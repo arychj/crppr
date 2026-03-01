@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import Icon from '@mdi/react';
+import { mdiGhostOutline } from '@mdi/js';
 
 export default function ItemTree({ children = [], parentId }) {
   return (
@@ -22,12 +24,12 @@ export default function ItemTree({ children = [], parentId }) {
           {children.map((child) => (
             <li key={child.id}>
               <Link
-                to={`/ident/${child.ident}`}
+                to={child.ident ? `/ident/${child.ident}` : `/id/${child.id}`}
                 className="flex items-center justify-between py-3 px-2 hover:bg-gray-50 rounded transition"
               >
                 <div>
                   <span className="font-mono text-sm text-gray-500 mr-2">
-                    {child.ident}
+                    {child.ident || <span title="Ghost — this item has no ident"><Icon path={mdiGhostOutline} size={0.6} className="inline" /></span>}
                   </span>
                   <span className="text-gray-800">
                     {child.name || '(unnamed)'}

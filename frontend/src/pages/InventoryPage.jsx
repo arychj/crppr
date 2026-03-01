@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listRootItems, getItem } from '../api';
+import Icon from '@mdi/react';
+import { mdiGhostOutline } from '@mdi/js';
 import useDocTitle from '../hooks/useDocTitle';
 
 function TreeNode({ item, level = 0 }) {
@@ -38,11 +40,11 @@ function TreeNode({ item, level = 0 }) {
           {item.is_container ? (loading ? '…' : expanded ? '▾' : '▸') : ''}
         </span>
         <Link
-          to={`/ident/${item.ident}`}
+          to={item.ident ? `/ident/${item.ident}` : `/id/${item.id}`}
           onClick={(e) => e.stopPropagation()}
           className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition min-w-0"
         >
-          <span className="font-mono text-gray-500 dark:text-gray-400 flex-shrink-0">{item.ident}</span>
+          <span className="font-mono text-gray-500 dark:text-gray-400 flex-shrink-0">{item.ident || <span title="Ghost — this item has no ident"><Icon path={mdiGhostOutline} size={0.6} className="inline" /></span>}</span>
           <span className="text-gray-800 dark:text-gray-100 truncate">{item.name || '(unnamed)'}</span>
         </Link>
         {item.is_container && (

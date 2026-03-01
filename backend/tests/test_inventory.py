@@ -213,17 +213,21 @@ def test_import_json_skips_existing(client):
     assert item["name"] == "Original"
 
 
-def test_import_json_skips_no_ident(client):
-    """Items without an ident are skipped."""
+def test_import_json_creates_ghost(client):
+    """Items without an ident are imported as ghosts."""
     payload = [{"name": "No Ident Item"}]
     r = client.post(
         "/api/inventory/import",
         files={"file": ("data.json", json.dumps(payload).encode(), "application/json")},
     )
     assert r.status_code == 200
-    assert r.json()["skipped"] == 1
-    assert r.json()["created"] == 0
-    assert "(no ident)" in r.json()["skipped_idents"]
+    assert r.json()["created"] == 1
+    assert r.json()["skipped"] == 0
+
+    # Verify the ghost exists
+    export = client.get("/api/inventory/export?format=json").json()
+    ghost = next(d for d in export if d["name"] == "No Ident Item")
+    assert ghost["ident"] is None
 
 
 def test_import_json_invalid(client):

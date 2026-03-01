@@ -25,6 +25,7 @@ class ItemCreate(ItemBase):
 
 
 class ItemUpdate(BaseModel):
+    ident: Optional[str] = None
     name: Optional[str] = None
     description: Optional[str] = None
     parent_id: Optional[int] = None  # triggers address recalculation
@@ -41,7 +42,7 @@ class MetadataValueOut(BaseModel):
 
 class ItemOut(BaseModel):
     id: int
-    ident: str
+    ident: Optional[str] = None
     name: Optional[str] = None
     description: Optional[str] = None
     parent_id: Optional[int] = None
@@ -58,7 +59,7 @@ class ItemOut(BaseModel):
 
 class ItemChildOut(BaseModel):
     id: int
-    ident: str
+    ident: Optional[str] = None
     name: Optional[str] = None
     is_container: bool
 
@@ -69,7 +70,7 @@ class ItemChildOut(BaseModel):
 
 class BreadcrumbSegment(BaseModel):
     id: int
-    ident: str
+    ident: Optional[str] = None
     name: Optional[str] = None
 
 

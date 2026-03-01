@@ -149,15 +149,12 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
 
 @router.post("/item", response_model=ItemOut, status_code=201)
 def create_item(body: ItemCreate, db: Session = Depends(get_db)):
-    ident = body.ident
-    if not ident:
-        ident = next_available_ident(db, _IDENT_START, _IDENT_END, _IDENT_FMT, _IDENT_PREFIX)
-        if ident is None:
-            raise HTTPException(status_code=409, detail="Ident range exhausted")
+    ident = body.ident or None  # normalise empty string to None
 
-    # Reject duplicate idents
-    if db.query(Item).filter(Item.ident == ident).first():
-        raise HTTPException(status_code=409, detail=f"An item with ident \"{ident}\" already exists")
+    if ident:
+        # Reject duplicate idents
+        if db.query(Item).filter(Item.ident == ident).first():
+            raise HTTPException(status_code=409, detail=f'An item with ident "{ident}" already exists')
 
     # Validate parent exists
     if body.parent_id is not None:
@@ -197,6 +194,14 @@ def update_item(item_id: int, body: ItemUpdate, db: Session = Depends(get_db)):
 
     parent_changed = False
     old_address = item.address
+
+    # Ident update — allow setting, changing, or clearing
+    if "ident" in body.model_fields_set:
+        new_ident = body.ident or None  # normalise empty string to None
+        if new_ident and new_ident != item.ident:
+            if db.query(Item).filter(Item.ident == new_ident).first():
+                raise HTTPException(status_code=409, detail=f'An item with ident "{new_ident}" already exists')
+        item.ident = new_ident
 
     if body.name is not None:
         item.name = body.name
