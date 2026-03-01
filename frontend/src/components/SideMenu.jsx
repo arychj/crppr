@@ -1,0 +1,231 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { searchItems } from '../api';
+import { useTheme } from '../hooks/useTheme';
+import { useDrawer } from '../hooks/useDrawer';
+import QRScanner from './QRScanner';
+import logo from '../assets/crppr.svg';
+import Icon from '@mdi/react';
+import {
+  mdiDockLeft,
+  mdiQrcodeScan,
+  mdiPlus,
+  mdiPackageVariantClosed,
+  mdiTag,
+  mdiPound,
+  mdiWeatherSunny,
+  mdiWeatherNight,
+  mdiCog,
+  mdiClose,
+} from '@mdi/js';
+
+export default function SideMenu() {
+  const { open, toggle } = useDrawer();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { dark, toggle: toggleTheme } = useTheme();
+
+  // Search state
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const debounceRef = useRef(null);
+  const searchRef = useRef(null);
+
+  // Debounced search
+  useEffect(() => {
+    if (!query.trim()) { setResults([]); setShowResults(false); return; }
+    setSearching(true);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      searchItems(query.trim())
+        .then((data) => { setResults(data); setShowResults(true); })
+        .catch(console.error)
+        .finally(() => setSearching(false));
+    }, 250);
+    return () => clearTimeout(debounceRef.current);
+  }, [query]);
+
+  // Close results on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (searchRef.current && !searchRef.current.contains(e.target)) setShowResults(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const handleResultClick = (item) => {
+    navigate(`/ident/${item.ident}`);
+    setQuery('');
+    setShowResults(false);
+  };
+
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanMatched, setScanMatched] = useState(null);
+
+  const navLinks = [
+    { to: '/new', label: 'Add Item', icon: mdiPlus },
+    { to: '/inventory', label: 'Browse Inventory', icon: mdiPackageVariantClosed },
+    { to: '/metadata', label: 'Metadata Manager', icon: mdiTag },
+    { to: '/ident', label: 'Label Generator', icon: mdiPound },
+  ];
+
+  return (
+    <>
+      {/* Sidebar — always visible; collapses to icon rail when closed */}
+      <aside
+        className={`fixed top-0 left-0 z-30 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-200 ease-in-out flex flex-col ${
+          open ? 'w-80' : 'w-12'
+        }`}
+      >
+        {/* ── Expanded header: logo + search + toggle ── */}
+        {open ? (
+          <div className="flex items-center gap-2 p-3 border-b border-gray-200 dark:border-gray-700" ref={searchRef}>
+            <Link to="/" className="flex-shrink-0">
+              <img src={logo} alt="crppr" className="h-7 dark:invert" />
+            </Link>
+
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => results.length > 0 && setShowResults(true)}
+                placeholder="Search items…"
+                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
+              />
+              {searching && <span className="absolute right-2 top-1.5 text-xs text-gray-400">…</span>}
+
+              {showResults && results.length > 0 && (
+                <ul className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto z-10">
+                  {results.map((r) => (
+                    <li key={r.id}>
+                      <button
+                        onClick={() => handleResultClick(r)}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                      >
+                        <span className="font-mono text-gray-500 dark:text-gray-400 mr-1">{r.ident}</span>
+                        <span className="text-gray-800 dark:text-gray-100">{r.name || '(unnamed)'}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {showResults && query.trim() && results.length === 0 && !searching && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg px-3 py-2 text-sm text-gray-400">
+                  No results
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={toggle}
+              className="flex-shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              aria-label="Collapse menu"
+            >
+              <Icon path={mdiDockLeft} size={0.85} className="text-gray-500 dark:text-gray-400" />
+            </button>
+          </div>
+        ) : (
+          /* ── Collapsed header: sidebar toggle icon ── */
+          <div className="flex items-center justify-center p-3 border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={toggle}
+              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              aria-label="Expand menu"
+            >
+              <Icon path={mdiDockLeft} size={0.85} className="text-gray-500 dark:text-gray-400" />
+            </button>
+          </div>
+        )}
+
+        {/* Nav links */}
+        <nav className={`flex-1 space-y-1 ${open ? 'px-3' : 'px-1'}`}>
+          {/* Scan Code — first in the list */}
+          <button
+            onClick={() => setScanOpen(true)}
+            title="Scan Code"
+            className={`flex items-center gap-3 py-2 rounded-lg text-sm transition w-full text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+              open ? 'px-3' : 'justify-center px-0'
+            }`}
+          >
+            <Icon path={mdiQrcodeScan} size={0.85} className="flex-shrink-0" />
+            {open && 'Scan Code'}
+          </button>
+
+          {navLinks.map((link) => {
+            const active = location.pathname === link.to || (link.to !== '/' && location.pathname.startsWith(link.to));
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                title={link.label}
+                className={`flex items-center gap-3 py-2 rounded-lg text-sm transition ${
+                  open ? 'px-3' : 'justify-center px-0'
+                } ${
+                  active
+                    ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-semibold'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                <Icon path={link.icon} size={0.85} className="flex-shrink-0" />
+                {open && link.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Bottom section: dark-mode toggle + settings */}
+        <div className={`border-t border-gray-200 dark:border-gray-700 p-3 space-y-1 ${open ? '' : 'px-1'}`}>
+          {/* Dark / Light toggle */}
+          <button
+            onClick={toggleTheme}
+            title={dark ? 'Light mode' : 'Dark mode'}
+            className={`flex items-center gap-3 w-full py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition ${
+              open ? 'px-3' : 'justify-center px-0'
+            }`}
+          >
+            <Icon path={dark ? mdiWeatherSunny : mdiWeatherNight} size={0.85} className="flex-shrink-0" />
+            {open && (dark ? 'Light mode' : 'Dark mode')}
+          </button>
+
+          {/* Settings */}
+          <Link
+            to="/settings"
+            title="Settings"
+            className={`flex items-center gap-3 py-2 rounded-lg text-sm transition ${
+              open ? 'px-3' : 'justify-center px-0'
+            } ${
+              location.pathname === '/settings'
+                ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-semibold'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            <Icon path={mdiCog} size={0.85} className="flex-shrink-0" />
+            {open && 'Settings'}
+          </Link>
+        </div>
+      </aside>
+
+      {/* QR Scanner Modal */}
+      {scanOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setScanOpen(false)}>
+          <div className={`rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 transition-colors duration-300 ${scanMatched === 'match' ? 'bg-green-500 dark:bg-green-600' : scanMatched === 'no-match' ? 'bg-amber-500 dark:bg-amber-600' : 'bg-white dark:bg-gray-800'}`} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className={`text-lg font-semibold transition-colors duration-300 ${scanMatched ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}>Scan Code</h2>
+              <button
+                onClick={() => { setScanOpen(false); setScanMatched(null); }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+              >
+                <Icon path={mdiClose} size={0.85} />
+              </button>
+            </div>
+            <QRScanner autoStart onClose={() => { setScanOpen(false); setScanMatched(null); }} onMatch={(type) => setScanMatched(type)} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

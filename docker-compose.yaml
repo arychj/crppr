@@ -1,12 +1,40 @@
-version: '3.3'
-
 services:
   db:
-    image: postgres
+    image: postgres:16
     environment:
-      POSTGRES_DB: "${CRPPR_DATABASE_DATABASE}"
-      POSTGRES_USER: "${CRPPR_DATABASE_USERNAME}"
-      POSTGRES_PASSWORD: "${CRPPR_DATABASE_PASSWORD}"
+      POSTGRES_DB: ${CRPPR_DB_NAME}
+      POSTGRES_USER: ${CRPPR_DB_USER}
+      POSTGRES_PASSWORD: ${CRPPR_DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${CRPPR_DB_PORT}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CRPPR_DB_USER}"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      CRPPR_DB_TYPE: postgresql
+      CRPPR_DB_HOST: db
+      CRPPR_DB_PORT: 5432
+      CRPPR_DB_NAME: ${CRPPR_DB_NAME}
+      CRPPR_DB_USER: ${CRPPR_DB_USER}
+      CRPPR_DB_PASSWORD: ${CRPPR_DB_PASSWORD}
+      CRPPR_TLS_ENABLED: ${CRPPR_TLS_ENABLED:-False}
+      CRPPR_TLS_PORT: ${CRPPR_TLS_PORT:-443}
+    ports:
+      - "8000:8000"
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
 

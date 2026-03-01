@@ -1,0 +1,48 @@
+import { Link } from 'react-router-dom';
+
+export default function ItemTree({ children = [], parentId }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-gray-700">Contents</h2>
+        {parentId && (
+          <Link
+            to={`/new?parent=${parentId}`}
+            className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+          >
+            + Add Item
+          </Link>
+        )}
+      </div>
+
+      {children.length === 0 ? (
+        <p className="text-gray-400 italic">No items inside this container.</p>
+      ) : (
+        <ul className="divide-y divide-gray-200">
+          {children.map((child) => (
+            <li key={child.id}>
+              <Link
+                to={`/ident/${child.ident}`}
+                className="flex items-center justify-between py-3 px-2 hover:bg-gray-50 rounded transition"
+              >
+                <div>
+                  <span className="font-mono text-sm text-gray-500 mr-2">
+                    {child.ident}
+                  </span>
+                  <span className="text-gray-800">
+                    {child.name || '(unnamed)'}
+                  </span>
+                </div>
+                {child.is_container && (
+                  <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                    container
+                  </span>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

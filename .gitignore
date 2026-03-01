@@ -1,3 +1,5 @@
 .env
 obj/
 bin/
+certs/
+*.pem
