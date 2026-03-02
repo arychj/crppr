@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { searchItems } from '../api';
+import Icon from '@mdi/react';
+import { mdiPackageVariant } from '@mdi/js';
 
 /**
  * Reusable search bar with live results dropdown.
@@ -30,7 +32,6 @@ export default function SearchBar({
       setOpen(false);
       return;
     }
-
     setLoading(true);
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -85,20 +86,36 @@ export default function SearchBar({
               className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer text-sm border-b dark:border-gray-700 last:border-b-0"
             >
               {navigateOnClick ? (
-                <Link
-                  to={`/ident/${item.ident}`}
-                  className="flex-1 flex items-center space-x-2 min-w-0"
-                  onClick={() => { setOpen(false); setQuery(''); }}
-                >
-                  <ResultLabel item={item} />
-                </Link>
+                <>
+                  <Link
+                    to={`/ident/${item.ident}`}
+                    className="flex-1 flex items-center space-x-2 min-w-0"
+                    onClick={() => { setOpen(false); setQuery(''); }}
+                  >
+                    <ResultLabel item={item} />
+                  </Link>
+                  {item.is_container && (
+                    <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1 ml-2">
+                      <Icon path={mdiPackageVariant} size={0.5} />
+                      <span className="hidden sm:inline">container</span>
+                    </span>
+                  )}
+                </>
               ) : (
-                <div
-                  className="flex-1 flex items-center space-x-2 min-w-0"
-                  onClick={() => handleResultClick(item)}
-                >
-                  <ResultLabel item={item} />
-                </div>
+                <>
+                  <div
+                    className="flex-1 flex items-center space-x-2 min-w-0"
+                    onClick={() => handleResultClick(item)}
+                  >
+                    <ResultLabel item={item} />
+                  </div>
+                  {item.is_container && (
+                    <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1 ml-2">
+                      <Icon path={mdiPackageVariant} size={0.5} />
+                      <span className="hidden sm:inline">container</span>
+                    </span>
+                  )}
+                </>
               )}
               {renderActions && (
                 <div className="flex-shrink-0 ml-2 flex items-center space-x-1">
@@ -125,8 +142,9 @@ function ResultLabel({ item }) {
       <span className="font-mono text-gray-500 dark:text-gray-400 flex-shrink-0">{item.ident}</span>
       <span className="text-gray-800 dark:text-gray-100 truncate">{item.name || '(unnamed)'}</span>
       {item.is_container && (
-        <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex-shrink-0">
-          container
+        <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1">
+          <Icon path={mdiPackageVariant} size={0.5} />
+          <span className="hidden sm:inline">container</span>
         </span>
       )}
     </>

@@ -12,6 +12,7 @@ import {
   mdiGhostOutline,
   mdiQrcodeScan,
   mdiClose,
+  mdiPackageVariant,
 } from '@mdi/js';
 
 const READER_ID = 'checkout-qr-reader';
@@ -279,7 +280,7 @@ export default function CheckoutPage() {
                   {r.is_checked_out && (
                     <Icon path={mdiHomeExportOutline} size={0.6} className="ml-1 text-amber-500 flex-shrink-0" title="Checked out" />
                   )}
-                  {r.is_container && <span className="ml-1 text-xs text-indigo-500 dark:text-indigo-400">container</span>}
+                  {r.is_container && <span className="ml-1 text-xs text-indigo-500 dark:text-indigo-400 inline-flex items-center gap-0.5"><Icon path={mdiPackageVariant} size={0.5} /><span className="hidden sm:inline">container</span></span>}
                 </button>
               </li>
             ))}

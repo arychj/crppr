@@ -6,7 +6,7 @@ import QRScanner from '../components/QRScanner';
 import useDocTitle from '../hooks/useDocTitle';
 import logo from '../assets/crppr.svg';
 import Icon from '@mdi/react';
-import { mdiPlus, mdiQrcodeScan, mdiFileTreeOutline, mdiGhostOutline, mdiHomeExportOutline } from '@mdi/js';
+import { mdiPlus, mdiQrcodeScan, mdiFileTreeOutline, mdiGhostOutline, mdiHomeExportOutline, mdiPackageVariant } from '@mdi/js';
 
 export default function HomePage() {
   const [tagline, setTagline] = useState('');
@@ -83,8 +83,9 @@ export default function HomePage() {
                   <span className="text-gray-800 dark:text-gray-100 truncate">{item.name || '(unnamed)'}</span>
                 </div>
                 {item.is_container && (
-                  <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">
-                    container
+                  <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full flex-shrink-0 ml-2 flex items-center gap-1">
+                    <Icon path={mdiPackageVariant} size={0.5} />
+                    <span className="hidden sm:inline">container</span>
                   </span>
                 )}
                 {item.is_checked_out && (

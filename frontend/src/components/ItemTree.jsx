@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import Icon from '@mdi/react';
-import { mdiGhostOutline, mdiHomeExportOutline } from '@mdi/js';
+import { mdiGhostOutline, mdiHomeExportOutline, mdiPackageVariant } from '@mdi/js';
 
 export default function ItemTree({ children = [], parentId }) {
   return (
@@ -36,8 +36,9 @@ export default function ItemTree({ children = [], parentId }) {
                   </span>
                 </div>
                 {child.is_container && (
-                  <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
-                    container
+                  <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Icon path={mdiPackageVariant} size={0.5} />
+                    <span className="hidden sm:inline">container</span>
                   </span>
                 )}
                 {child.is_checked_out && (

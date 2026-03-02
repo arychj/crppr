@@ -5,7 +5,7 @@ import { searchItems, lookupByIdent, moveItem, listSettings } from '../api';
 import { useToast } from '../components/Toast';
 import useDocTitle from '../hooks/useDocTitle';
 import Icon from '@mdi/react';
-import { mdiQrcodeScan, mdiClose, mdiArrowDownBold, mdiHomeExportOutline } from '@mdi/js';
+import { mdiQrcodeScan, mdiClose, mdiArrowDownBold, mdiHomeExportOutline, mdiPackageVariant } from '@mdi/js';
 
 const READER_ID = 'move-qr-reader';
 
@@ -303,7 +303,7 @@ export default function MovePage() {
             <span className="font-mono text-gray-500 dark:text-gray-400 mr-1">{r.ident || '👻'}</span>
             <span className="text-gray-800 dark:text-gray-100">{r.name || '(unnamed)'}</span>
             {r.is_checked_out && <Icon path={mdiHomeExportOutline} size={0.6} className="ml-1 text-amber-500" title="Checked out" />}
-            {r.is_container && <span className="ml-1 text-xs text-indigo-500 dark:text-indigo-400">container</span>}
+            {r.is_container && <span className="ml-1 text-xs text-indigo-500 dark:text-indigo-400 inline-flex items-center gap-0.5"><Icon path={mdiPackageVariant} size={0.5} /><span className="hidden sm:inline">container</span></span>}
           </button>
         </li>
       ))}
@@ -394,8 +394,8 @@ export default function MovePage() {
                     >
                       <span className="font-mono text-gray-500 dark:text-gray-400 mr-1">{r.ident || '👻'}</span>
                       <span className="text-gray-800 dark:text-gray-100">{r.name || '(unnamed)'}</span>
-                      {r.is_container && <span className="ml-1 text-xs text-indigo-500 dark:text-indigo-400">container</span>}
-                      {!r.is_container && <span className="ml-1 text-xs text-gray-400">not a container</span>}
+                      {r.is_container && <span className="ml-1 text-xs text-indigo-500 dark:text-indigo-400 inline-flex items-center gap-0.5"><Icon path={mdiPackageVariant} size={0.5} /><span className="hidden sm:inline">container</span></span>}
+                      {!r.is_container && <span className="ml-1 text-xs text-gray-400"><span className="hidden sm:inline">not a container</span></span>}
                     </button>
                   </li>
                 ))}

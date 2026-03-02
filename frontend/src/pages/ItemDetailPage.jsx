@@ -338,7 +338,7 @@ export default function ItemDetailPage() {
             {item.is_container && (
               <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Icon path={mdiPackageVariant} size={0.5} />
-                container
+                <span className="hidden sm:inline">container</span>
               </span>
             )}
             {item.is_checked_out && (

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listRootItems, getItem } from '../api';
 import Icon from '@mdi/react';
-import { mdiGhostOutline, mdiHomeExportOutline } from '@mdi/js';
+import { mdiGhostOutline, mdiHomeExportOutline, mdiPackageVariant } from '@mdi/js';
 import useDocTitle from '../hooks/useDocTitle';
 
 function TreeNode({ item, level = 0 }) {
@@ -48,8 +48,9 @@ function TreeNode({ item, level = 0 }) {
           <span className="text-gray-800 dark:text-gray-100 truncate">{item.name || '(unnamed)'}</span>
         </Link>
         {item.is_container && (
-          <span className="ml-auto text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full flex-shrink-0">
-            container
+          <span className="ml-auto text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1">
+            <Icon path={mdiPackageVariant} size={0.5} />
+            <span className="hidden sm:inline">container</span>
           </span>
         )}
         {item.is_checked_out && (
