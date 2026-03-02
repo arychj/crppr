@@ -26,6 +26,7 @@ class Item(Base):
     parent_id = Column(Integer, ForeignKey("items.id", ondelete="SET NULL"), nullable=True)
     address = Column(String(1024), nullable=False, default="", index=True)
     is_container = Column(Boolean, nullable=False, default=False)
+    is_checked_out = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     last_viewed = Column(DateTime(timezone=True), nullable=True)

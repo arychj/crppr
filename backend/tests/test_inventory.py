@@ -96,7 +96,7 @@ def test_export_csv_empty(client):
     reader = csv.reader(io.StringIO(r.text))
     rows = list(reader)
     assert len(rows) == 1  # header only
-    assert rows[0] == ["ident", "name", "description", "is_container", "parent_ident", "metadata"]
+    assert rows[0] == ["ident", "name", "description", "is_container", "is_checked_out", "parent_ident", "metadata"]
 
 
 def test_export_csv_with_data(client):
@@ -370,3 +370,45 @@ def test_import_unsupported_format(client):
         files={"file": ("data.xml", b"<items/>", "application/xml")},
     )
     assert r.status_code == 400
+
+
+# ── Checkout round-trip tests ────────────────────────────────────────
+
+def test_export_json_includes_checked_out(client):
+    """JSON export includes is_checked_out field."""
+    client.post("/api/item", json={"ident": "CO-EXP", "name": "Exported", "is_checked_out": True})
+    r = client.get("/api/inventory/export?format=json")
+    data = r.json()
+    item = [d for d in data if d["ident"] == "CO-EXP"][0]
+    assert item["is_checked_out"] is True
+
+
+def test_import_json_with_checked_out(client):
+    """Importing JSON with is_checked_out preserves the flag."""
+    payload = json.dumps([{
+        "ident": "CO-IMP",
+        "name": "Imported",
+        "is_container": False,
+        "is_checked_out": True,
+    }])
+    r = client.post(
+        "/api/inventory/import",
+        files={"file": ("data.json", payload.encode(), "application/json")},
+    )
+    assert r.status_code == 200
+    assert r.json()["created"] == 1
+
+    exported = client.get("/api/inventory/export?format=json").json()
+    item = [d for d in exported if d["ident"] == "CO-IMP"][0]
+    assert item["is_checked_out"] is True
+
+
+def test_export_csv_includes_checked_out(client):
+    """CSV export includes is_checked_out column."""
+    client.post("/api/item", json={"ident": "CO-CSV", "name": "CSVItem", "is_checked_out": True})
+    r = client.get("/api/inventory/export?format=csv")
+    text = r.text
+    reader = csv.DictReader(io.StringIO(text))
+    rows = list(reader)
+    item = [row for row in rows if row["ident"] == "CO-CSV"][0]
+    assert item["is_checked_out"] == "True"

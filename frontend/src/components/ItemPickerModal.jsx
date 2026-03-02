@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '@mdi/react';
-import { mdiGhostOutline } from '@mdi/js';
+import { mdiGhostOutline, mdiHomeExportOutline } from '@mdi/js';
 import { searchItems } from '../api';
 
 /**
@@ -36,7 +36,10 @@ export default function ItemPickerModal({
     if (open) {
       setQuery('');
       setResults([]);
-      setTimeout(() => inputRef.current?.focus(), 100);
+      // Use rAF + timeout to ensure the modal is rendered and visible before focusing
+      requestAnimationFrame(() => {
+        setTimeout(() => inputRef.current?.focus(), 0);
+      });
     }
   }, [open]);
 
@@ -88,6 +91,7 @@ export default function ItemPickerModal({
             <input
               ref={inputRef}
               type="text"
+              autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search items…"
@@ -117,6 +121,9 @@ export default function ItemPickerModal({
                   <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex-shrink-0">
                     container
                   </span>
+                )}
+                {item.is_checked_out && (
+                  <Icon path={mdiHomeExportOutline} size={0.6} className="text-amber-500 flex-shrink-0" title="Checked out" />
                 )}
               </button>
             ))}

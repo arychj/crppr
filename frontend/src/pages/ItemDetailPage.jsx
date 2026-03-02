@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { getItem, getItemPath, updateItem, getSetting } from '../api';
 import moment from 'moment';
 import Icon from '@mdi/react';
-import { mdiMapMarkerOutline, mdiLink, mdiClockEditOutline, mdiGhostOutline } from '@mdi/js';
+import { mdiMapMarkerOutline, mdiLink, mdiClockEditOutline, mdiGhostOutline, mdiHomeExportOutline } from '@mdi/js';
 import BreadcrumbNav from '../components/BreadcrumbNav';
 import EAVEditor from '../components/EAVEditor';
 import ItemPickerModal from '../components/ItemPickerModal';
@@ -338,6 +338,12 @@ export default function ItemDetailPage() {
             {item.is_container && (
               <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full">
                 container
+              </span>
+            )}
+            {item.is_checked_out && (
+              <span className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Icon path={mdiHomeExportOutline} size={0.5} />
+                checked out
               </span>
             )}
           </div>

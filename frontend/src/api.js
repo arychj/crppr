@@ -62,6 +62,13 @@ export function recentItems() {
   return request('/item/recent');
 }
 
+export function moveItem(itemIdent, destinationIdent) {
+  return request('/item/move', {
+    method: 'POST',
+    body: JSON.stringify({ item_ident: itemIdent, destination_ident: destinationIdent }),
+  });
+}
+
 // ── Metadata ───────────────────────────────────────────────────────
 
 export function listMetadataAttributes() {

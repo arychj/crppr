@@ -6,7 +6,7 @@ import QRScanner from '../components/QRScanner';
 import useDocTitle from '../hooks/useDocTitle';
 import logo from '../assets/crppr.svg';
 import Icon from '@mdi/react';
-import { mdiPlus, mdiQrcodeScan, mdiPackageVariantClosed, mdiGhostOutline } from '@mdi/js';
+import { mdiPlus, mdiQrcodeScan, mdiFileTreeOutline, mdiGhostOutline, mdiHomeExportOutline } from '@mdi/js';
 
 export default function HomePage() {
   const [tagline, setTagline] = useState('');
@@ -61,7 +61,7 @@ export default function HomePage() {
           to="/inventory"
           className="flex flex-col items-center justify-center aspect-square bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg hover:scale-[1.02] transition p-6 text-center"
         >
-          <Icon path={mdiPackageVariantClosed} size={1.8} className="mb-3 text-gray-700 dark:text-gray-300" />
+          <Icon path={mdiFileTreeOutline} size={1.8} className="mb-3 text-gray-700 dark:text-gray-300" />
           <span className="text-lg font-semibold text-gray-800 dark:text-gray-100">Browse</span>
           <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">Explore the inventory tree</span>
         </Link>
@@ -86,6 +86,9 @@ export default function HomePage() {
                   <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">
                     container
                   </span>
+                )}
+                {item.is_checked_out && (
+                  <Icon path={mdiHomeExportOutline} size={0.7} className="text-amber-500 flex-shrink-0 ml-2" title="Checked out" />
                 )}
               </Link>
             ))}

@@ -11,6 +11,7 @@ class ItemBase(BaseModel):
     description: Optional[str] = None
     parent_id: Optional[int] = None
     is_container: bool = False
+    is_checked_out: bool = False
 
 
 class MetadataValueCreate(BaseModel):
@@ -30,6 +31,7 @@ class ItemUpdate(BaseModel):
     description: Optional[str] = None
     parent_id: Optional[int] = None  # triggers address recalculation
     is_container: Optional[bool] = None
+    is_checked_out: Optional[bool] = None
 
 
 class MetadataValueOut(BaseModel):
@@ -48,6 +50,7 @@ class ItemOut(BaseModel):
     parent_id: Optional[int] = None
     address: str
     is_container: bool
+    is_checked_out: bool = False
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     last_updated: Optional[datetime] = None
@@ -62,6 +65,7 @@ class ItemChildOut(BaseModel):
     ident: Optional[str] = None
     name: Optional[str] = None
     is_container: bool
+    is_checked_out: bool = False
 
     model_config = {"from_attributes": True}
 
@@ -128,3 +132,19 @@ class IdentRequest(BaseModel):
 class IdentResponse(BaseModel):
     ident: Optional[str] = None
     exhausted: bool = False
+
+
+# ── Move ────────────────────────────────────────────────────────────
+
+class MoveRequest(BaseModel):
+    item_ident: str
+    destination_ident: str
+
+
+class MoveResponse(BaseModel):
+    id: int
+    ident: Optional[str] = None
+    name: Optional[str] = None
+    parent_id: Optional[int] = None
+    destination_ident: Optional[str] = None
+    destination_name: Optional[str] = None

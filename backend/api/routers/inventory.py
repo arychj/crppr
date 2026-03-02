@@ -29,6 +29,7 @@ def _item_to_dict(item: Item) -> dict:
         "name": item.name,
         "description": item.description,
         "is_container": item.is_container,
+        "is_checked_out": item.is_checked_out,
         "parent_ident": item.parent.ident if item.parent else None,
         "metadata": metadata,
     }
@@ -111,6 +112,7 @@ def _import_items(db: Session, records: list[dict]) -> dict:
             name=rec.get("name"),
             description=rec.get("description"),
             is_container=bool(rec.get("is_container", False)),
+            is_checked_out=bool(rec.get("is_checked_out", False)),
             last_updated=datetime.now(timezone.utc),
         )
         db.add(item)
@@ -166,13 +168,14 @@ def export_inventory(
     if format == "csv":
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(["ident", "name", "description", "is_container", "parent_ident", "metadata"])
+        writer.writerow(["ident", "name", "description", "is_container", "is_checked_out", "parent_ident", "metadata"])
         for row in data:
             writer.writerow([
                 row["ident"],
                 row["name"] or "",
                 row["description"] or "",
                 row["is_container"],
+                row["is_checked_out"],
                 row["parent_ident"] or "",
                 _metadata_to_cell(row["metadata"]),
             ])
@@ -215,6 +218,7 @@ async def import_inventory(
                 "name": row.get("name", "").strip() or None,
                 "description": row.get("description", "").strip() or None,
                 "is_container": row.get("is_container", "").strip().lower() in ("true", "1", "yes"),
+                "is_checked_out": row.get("is_checked_out", "").strip().lower() in ("true", "1", "yes"),
                 "parent_ident": row.get("parent_ident", "").strip() or None,
                 "metadata": _cell_to_metadata(row.get("metadata", "")),
             }

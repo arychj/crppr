@@ -13,6 +13,8 @@ from ..schemas import (
     MetadataValueOut,
     MetadataValueSet,
     MetadataValueCreate,
+    MoveRequest,
+    MoveResponse,
 )
 from ..services.address import set_address_for_new_item, update_address_on_move
 from ..services.ident import next_available_ident
@@ -48,6 +50,7 @@ def _item_to_out(item: Item) -> ItemOut:
             ident=c.ident,
             name=c.name,
             is_container=c.is_container,
+            is_checked_out=c.is_checked_out,
         )
         for c in sorted_children
     ]
@@ -59,6 +62,7 @@ def _item_to_out(item: Item) -> ItemOut:
         parent_id=item.parent_id,
         address=item.address,
         is_container=item.is_container,
+        is_checked_out=item.is_checked_out,
         created_at=item.created_at,
         updated_at=item.updated_at,
         last_updated=item.last_updated,
@@ -131,6 +135,48 @@ def search_items(
     return [_item_to_out(i) for i in items]
 
 
+# ── POST /item/move  — move item to a new container by ident ───────
+
+@router.post("/item/move", response_model=MoveResponse)
+def move_item(body: MoveRequest, db: Session = Depends(get_db)):
+    """Move an item to a different container, specified by idents."""
+    item = db.query(Item).filter(Item.ident == body.item_ident).first()
+    if not item:
+        raise HTTPException(status_code=404, detail=f'Item with ident "{body.item_ident}" not found')
+
+    dest = db.query(Item).filter(Item.ident == body.destination_ident).first()
+    if not dest:
+        raise HTTPException(status_code=404, detail=f'Destination with ident "{body.destination_ident}" not found')
+
+    if not dest.is_container:
+        raise HTTPException(status_code=400, detail=f'Destination "{body.destination_ident}" is not a container')
+
+    if item.id == dest.id:
+        raise HTTPException(status_code=400, detail="Cannot move an item into itself")
+
+    # Prevent moving a container under one of its own descendants
+    if dest.address and item.address and dest.address.startswith(item.address):
+        raise HTTPException(status_code=400, detail="Cannot move a container under one of its own descendants")
+
+    old_address = item.address
+    item.parent_id = dest.id
+    item.last_updated = datetime.now(timezone.utc)
+    db.flush()
+
+    update_address_on_move(db, item, old_address)
+
+    db.commit()
+    db.refresh(item)
+    return MoveResponse(
+        id=item.id,
+        ident=item.ident,
+        name=item.name,
+        parent_id=item.parent_id,
+        destination_ident=dest.ident,
+        destination_name=dest.name,
+    )
+
+
 # ── GET /item/{id} ─────────────────────────────────────────────────
 
 @router.get("/item/{item_id}", response_model=ItemOut)
@@ -168,6 +214,7 @@ def create_item(body: ItemCreate, db: Session = Depends(get_db)):
         description=body.description,
         parent_id=body.parent_id,
         is_container=body.is_container,
+        is_checked_out=body.is_checked_out,
         last_updated=datetime.now(timezone.utc),
     )
     db.add(item)
@@ -209,6 +256,8 @@ def update_item(item_id: int, body: ItemUpdate, db: Session = Depends(get_db)):
         item.description = body.description
     if body.is_container is not None:
         item.is_container = body.is_container
+    if body.is_checked_out is not None:
+        item.is_checked_out = body.is_checked_out
 
     # Touch last_updated for any field change
     item.last_updated = datetime.now(timezone.utc)

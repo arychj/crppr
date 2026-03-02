@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import Icon from '@mdi/react';
-import { mdiGhostOutline } from '@mdi/js';
+import { mdiGhostOutline, mdiHomeExportOutline } from '@mdi/js';
 
 export default function ItemTree({ children = [], parentId }) {
   return (
@@ -39,6 +39,9 @@ export default function ItemTree({ children = [], parentId }) {
                   <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
                     container
                   </span>
+                )}
+                {child.is_checked_out && (
+                  <Icon path={mdiHomeExportOutline} size={0.7} className="text-amber-500" title="Checked out" />
                 )}
               </Link>
             </li>

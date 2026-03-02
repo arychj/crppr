@@ -271,3 +271,130 @@ def test_delete_metadata_value(client):
 def test_delete_metadata_nonexistent_item(client):
     r = client.delete("/api/item/99999/metadata/1")
     assert r.status_code == 404
+
+
+# ── Move ─────────────────────────────────────────────────────────────
+
+
+def test_move_item_by_ident(client):
+    """Move an item to a different container via POST /item/move."""
+    box_a = client.post("/api/item", json={"ident": "MBOX-A", "name": "Box A", "is_container": True}).json()
+    box_b = client.post("/api/item", json={"ident": "MBOX-B", "name": "Box B", "is_container": True}).json()
+    item = client.post("/api/item", json={"ident": "MITEM-1", "name": "Widget", "parent_id": box_a["id"]}).json()
+    assert item["parent_id"] == box_a["id"]
+
+    r = client.post("/api/item/move", json={"item_ident": "MITEM-1", "destination_ident": "MBOX-B"})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["parent_id"] == box_b["id"]
+    assert data["destination_ident"] == "MBOX-B"
+
+    # Verify the item's address was updated
+    moved = client.get(f"/api/item/{item['id']}").json()
+    assert moved["parent_id"] == box_b["id"]
+    assert moved["address"] == f"{box_b['id']}.{item['id']}"
+
+
+def test_move_item_not_found(client):
+    """Moving a non-existent item returns 404."""
+    client.post("/api/item", json={"ident": "MDEST-1", "name": "Dest", "is_container": True})
+    r = client.post("/api/item/move", json={"item_ident": "NONEXISTENT", "destination_ident": "MDEST-1"})
+    assert r.status_code == 404
+
+
+def test_move_destination_not_found(client):
+    """Moving to a non-existent destination returns 404."""
+    client.post("/api/item", json={"ident": "MSRC-1", "name": "Source"})
+    r = client.post("/api/item/move", json={"item_ident": "MSRC-1", "destination_ident": "NONEXISTENT"})
+    assert r.status_code == 404
+
+
+def test_move_destination_not_container(client):
+    """Moving to a non-container returns 400."""
+    client.post("/api/item", json={"ident": "MSRC-2", "name": "Source"})
+    client.post("/api/item", json={"ident": "MNOTC-1", "name": "Not a container", "is_container": False})
+    r = client.post("/api/item/move", json={"item_ident": "MSRC-2", "destination_ident": "MNOTC-1"})
+    assert r.status_code == 400
+    assert "not a container" in r.json()["detail"].lower()
+
+
+def test_move_item_into_itself(client):
+    """Moving an item into itself returns 400."""
+    client.post("/api/item", json={"ident": "MSELF-1", "name": "Self", "is_container": True})
+    r = client.post("/api/item/move", json={"item_ident": "MSELF-1", "destination_ident": "MSELF-1"})
+    assert r.status_code == 400
+
+
+def test_move_container_under_own_descendant(client):
+    """Moving a container under one of its own descendants returns 400."""
+    parent = client.post("/api/item", json={"ident": "MPAR-1", "name": "Parent", "is_container": True}).json()
+    child = client.post("/api/item", json={"ident": "MCHD-1", "name": "Child", "is_container": True, "parent_id": parent["id"]}).json()
+    r = client.post("/api/item/move", json={"item_ident": "MPAR-1", "destination_ident": "MCHD-1"})
+    assert r.status_code == 400
+    assert "descendant" in r.json()["detail"].lower()
+
+
+def test_move_cascades_address(client):
+    """Moving a container updates addresses of its descendants."""
+    box = client.post("/api/item", json={"ident": "MCBOX-1", "name": "Box", "is_container": True}).json()
+    inner = client.post("/api/item", json={"ident": "MCINN-1", "name": "Inner", "is_container": True, "parent_id": box["id"]}).json()
+    leaf = client.post("/api/item", json={"ident": "MCLEF-1", "name": "Leaf", "parent_id": inner["id"]}).json()
+    new_parent = client.post("/api/item", json={"ident": "MCNEW-1", "name": "New Parent", "is_container": True}).json()
+
+    r = client.post("/api/item/move", json={"item_ident": "MCBOX-1", "destination_ident": "MCNEW-1"})
+    assert r.status_code == 200
+
+    # Verify descendant addresses cascaded
+    moved_inner = client.get(f"/api/item/{inner['id']}").json()
+    moved_leaf = client.get(f"/api/item/{leaf['id']}").json()
+    assert moved_inner["address"] == f"{new_parent['id']}.{box['id']}.{inner['id']}"
+    assert moved_leaf["address"] == f"{new_parent['id']}.{box['id']}.{inner['id']}.{leaf['id']}"
+
+
+# ── Checkout tests ──────────────────────────────────────────────────
+
+def test_checkout_default_false(client):
+    """New items default to is_checked_out=False."""
+    r = client.post("/api/item", json={"ident": "CO-1", "name": "CheckItem"})
+    assert r.status_code == 201
+    assert r.json()["is_checked_out"] is False
+
+
+def test_checkout_toggle_via_patch(client):
+    """PATCH can set is_checked_out to True then back to False."""
+    item = client.post("/api/item", json={"ident": "CO-2", "name": "ToggleMe"}).json()
+    # Check out
+    r = client.patch(f"/api/item/{item['id']}", json={"is_checked_out": True})
+    assert r.status_code == 200
+    assert r.json()["is_checked_out"] is True
+    # Check back in
+    r = client.patch(f"/api/item/{item['id']}", json={"is_checked_out": False})
+    assert r.status_code == 200
+    assert r.json()["is_checked_out"] is False
+
+
+def test_checkout_create_with_true(client):
+    """Can create an item already checked out."""
+    r = client.post("/api/item", json={"ident": "CO-3", "name": "PreChecked", "is_checked_out": True})
+    assert r.status_code == 201
+    assert r.json()["is_checked_out"] is True
+
+
+def test_checkout_in_children(client):
+    """Checked-out status appears in parent's children list."""
+    parent = client.post("/api/item", json={"ident": "CO-P", "name": "Parent", "is_container": True}).json()
+    client.post("/api/item", json={"ident": "CO-C", "name": "Child", "parent_id": parent["id"], "is_checked_out": True})
+    fetched = client.get(f"/api/item/{parent['id']}").json()
+    child_out = [c for c in fetched["children"] if c["ident"] == "CO-C"][0]
+    assert child_out["is_checked_out"] is True
+
+
+def test_checkout_preserved_on_move(client):
+    """Moving an item preserves its checked-out status."""
+    box1 = client.post("/api/item", json={"ident": "MV-B1", "name": "Box1", "is_container": True}).json()
+    box2 = client.post("/api/item", json={"ident": "MV-B2", "name": "Box2", "is_container": True}).json()
+    item = client.post("/api/item", json={"ident": "MV-I1", "name": "Item", "parent_id": box1["id"], "is_checked_out": True}).json()
+    r = client.post("/api/item/move", json={"item_ident": "MV-I1", "destination_ident": "MV-B2"})
+    assert r.status_code == 200
+    moved = client.get(f"/api/item/{item['id']}").json()
+    assert moved["is_checked_out"] is True

@@ -3,3 +3,4 @@ obj/
 bin/
 certs/
 *.pem
+**/__pycache__/

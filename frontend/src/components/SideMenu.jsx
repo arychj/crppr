@@ -13,13 +13,17 @@ import {
   mdiPlus,
   mdiHistory,
   mdiPackageVariantClosed,
+  mdiFileTreeOutline,
   mdiTag,
   mdiSimOutline,
+  mdiExport,
+  mdiSwapHorizontal,
   mdiWeatherSunny,
   mdiWeatherNight,
   mdiFileArrowUpDownOutline,
   mdiCog,
   mdiClose,
+  mdiHomeExportOutline,
 } from '@mdi/js';
 
 export default function SideMenu() {
@@ -73,8 +77,10 @@ export default function SideMenu() {
 
   const navLinks = [
     { to: '/new', label: 'Add', icon: mdiPlus },
+    { to: '/checkout', label: 'Check In / Out', icon: mdiSwapHorizontal },
+    { to: '/move', label: 'Move', icon: mdiExport },
     { to: '/', label: 'Recents', icon: mdiHistory },
-    { to: '/inventory', label: 'Browse', icon: mdiPackageVariantClosed },
+    { to: '/inventory', label: 'Browse', icon: mdiFileTreeOutline },
     { to: '/metadata', label: 'Metadata', icon: mdiTag },
     { to: '/ident', label: 'Labels', icon: mdiSimOutline },
     { to: '/import-export', label: 'Backups', icon: mdiFileArrowUpDownOutline },
@@ -128,6 +134,9 @@ export default function SideMenu() {
                       >
                         <span className="font-mono text-gray-500 dark:text-gray-400 mr-1">{r.ident}</span>
                         <span className="text-gray-800 dark:text-gray-100">{r.name || '(unnamed)'}</span>
+                        {r.is_checked_out && (
+                          <Icon path={mdiHomeExportOutline} size={0.6} className="ml-1 text-amber-500" title="Checked out" />
+                        )}
                       </button>
                     </li>
                   ))}
@@ -152,7 +161,7 @@ export default function SideMenu() {
           /* ── Collapsed header: logo / open toggle ── */
           <div
             className="flex items-center justify-center p-3 border-b border-gray-200 dark:border-gray-700 cursor-pointer"
-            onClick={toggle}
+            onClick={() => { setLogoHover(false); toggle(); }}
             onMouseEnter={() => setLogoHover(true)}
             onMouseLeave={() => setLogoHover(false)}
             title="Expand menu"

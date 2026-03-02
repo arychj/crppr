@@ -4,7 +4,7 @@
   <img src="frontend/public/crppr-dark.svg" alt="crppr logo" />
 </p>
 
-> **WARNING:** This project has been on my todo list for years and I'm finally getting around to doing something about it. This is completely vibe coded, I knocked it out in less than a day, and I haven't reviewed any of the code. Keep proper backups, don't use this for anything truly important, if something breaks you get to keep both pieces. You've been warned.
+> **WARNING:** This project has been on my todo list for years and I'm finally getting around to doing something about it. This is completely vibe coded, I knocked it out in a weekend, and I haven't reviewed any of the code. Keep proper backups, don't use this for anything truly important, if something breaks you get to keep both pieces. You've been warned.
 
 ## What is crppr?
 
