@@ -71,6 +71,10 @@ Items can carry arbitrary **metadata** as key-value pairs (an "Entity-Attribute-
 
 You can nest as deep as you need (`House → Garage → Parts Cabinet → Drawer A → bag of screws`) or keep things flat — the hierarchy adapts to however you think about your stuff.
 
+### Check In / Out
+
+Sometimes things leave their containers — a drill goes out to a job site, a book gets lent to a friend, a bin of holiday decorations comes down from the attic. The **Check In / Out** feature lets you flag an item as "checked out" so you know it isn't where the inventory says it should be. Checked-out items display an amber icon everywhere they appear: the home page recents list, search dropdowns, the item detail page, container contents, and the item picker modal.
+
 ### Import & Export
 
 Your data is yours. crppr can export the entire inventory as **JSON** or **CSV** (with all metadata and parent relationships intact) and import it back. The CSV format keeps metadata in a single cell as `key: value` lines, so it stays readable in any spreadsheet app.
