@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listRootItems, getItem } from '../api';
 import Icon from '@mdi/react';
-import { mdiGhostOutline } from '@mdi/js';
+import { mdiGhostOutline, mdiHomeExportOutline } from '@mdi/js';
 import useDocTitle from '../hooks/useDocTitle';
 
 function TreeNode({ item, level = 0 }) {
@@ -51,6 +51,9 @@ function TreeNode({ item, level = 0 }) {
           <span className="ml-auto text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full flex-shrink-0">
             container
           </span>
+        )}
+        {item.is_checked_out && (
+          <Icon path={mdiHomeExportOutline} size={0.7} className={`${item.is_container ? 'ml-2' : 'ml-auto'} text-amber-500 flex-shrink-0`} title="Checked out" />
         )}
       </div>
       {expanded && children?.map((child) => (

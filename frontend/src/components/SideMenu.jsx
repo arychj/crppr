@@ -17,6 +17,7 @@ import {
   mdiTag,
   mdiSimOutline,
   mdiExport,
+  mdiTrayArrowDown,
   mdiSwapHorizontal,
   mdiWeatherSunny,
   mdiWeatherNight,
@@ -78,7 +79,7 @@ export default function SideMenu() {
   const navLinks = [
     { to: '/new', label: 'Add', icon: mdiPlus },
     { to: '/checkout', label: 'Check In / Out', icon: mdiSwapHorizontal },
-    { to: '/move', label: 'Move', icon: mdiExport },
+    { to: '/move', label: 'Move', icon: mdiTrayArrowDown },
     { to: '/', label: 'Recents', icon: mdiHistory },
     { to: '/inventory', label: 'Browse', icon: mdiFileTreeOutline },
     { to: '/metadata', label: 'Metadata', icon: mdiTag },

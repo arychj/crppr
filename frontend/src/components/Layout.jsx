@@ -4,7 +4,7 @@ import SideMenu from '../components/SideMenu';
 import { useDrawer } from '../hooks/useDrawer';
 import QRScanner from '../components/QRScanner';
 import Icon from '@mdi/react';
-import { mdiMenu, mdiPlus, mdiQrcodeScan, mdiPackageVariantClosed, mdiClose } from '@mdi/js';
+import { mdiMenu, mdiPlus, mdiQrcodeScan, mdiFileTreeOutline, mdiClose } from '@mdi/js';
 
 /**
  * Top-level layout: collapsible side menu that pushes content.
@@ -44,7 +44,7 @@ export default function Layout() {
           <span className="text-[10px]">Scan</span>
         </button>
         <Link to="/inventory" className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-300">
-          <Icon path={mdiPackageVariantClosed} size={1} />
+          <Icon path={mdiFileTreeOutline} size={1} />
           <span className="text-[10px]">Browse</span>
         </Link>
       </nav>

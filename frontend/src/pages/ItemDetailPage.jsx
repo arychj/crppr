@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { getItem, getItemPath, updateItem, getSetting } from '../api';
 import moment from 'moment';
 import Icon from '@mdi/react';
-import { mdiMapMarkerOutline, mdiLink, mdiClockEditOutline, mdiGhostOutline, mdiHomeExportOutline } from '@mdi/js';
+import { mdiMapMarkerOutline, mdiLink, mdiClockEditOutline, mdiGhostOutline, mdiHomeExportOutline, mdiPackageVariant, mdiTrayArrowDown, mdiSync } from '@mdi/js';
 import BreadcrumbNav from '../components/BreadcrumbNav';
 import EAVEditor from '../components/EAVEditor';
 import ItemPickerModal from '../components/ItemPickerModal';
@@ -336,41 +336,45 @@ export default function ItemDetailPage() {
               </span>
             )}
             {item.is_container && (
-              <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Icon path={mdiPackageVariant} size={0.5} />
                 container
               </span>
             )}
             {item.is_checked_out && (
               <span className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Icon path={mdiHomeExportOutline} size={0.5} />
-                checked out
+                <span className="hidden sm:inline">checked out</span>
               </span>
             )}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setMoveModalOpen(true)}
-              className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded hover:bg-blue-700 transition">
-              Move
+              className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded hover:bg-blue-700 transition flex items-center gap-1">
+              <Icon path={mdiTrayArrowDown} size={0.5} />
+              <span className="hidden sm:inline">Move</span>
             </button>
             {item.is_container ? (
               <button
                 onClick={canConvertToItem ? () => setConfirmConvert(true) : undefined}
                 disabled={hasChildren}
                 title={hasChildren ? 'Remove all items from this container first' : 'Convert to item'}
-                className={`text-xs px-2 py-0.5 rounded transition ${
+                className={`text-xs px-2 py-0.5 rounded transition flex items-center gap-1 ${
                   hasChildren
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
                     : 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-300'
                 }`}
               >
-                Convert to item
+                <Icon path={mdiSync} size={0.5} />
+                <span className="hidden sm:inline">Convert to item</span>
               </button>
             ) : (
               <button
                 onClick={() => setConfirmConvert(true)}
-                className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-300 transition"
+                className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-300 transition flex items-center gap-1"
               >
-                Convert to container
+                <Icon path={mdiSync} size={0.5} />
+                <span className="hidden sm:inline">Convert to container</span>
               </button>
             )}
           </div>
