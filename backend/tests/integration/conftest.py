@@ -5,6 +5,7 @@ Uses a file-based SQLite database so Alembic migrations can run.
 """
 
 import os
+import uuid
 import pytest
 from pathlib import Path
 
@@ -23,7 +24,7 @@ SQLALCHEMY_TEST_URL = "sqlite:///test_crppr.db"
 engine = create_engine(SQLALCHEMY_TEST_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-_BACKEND_DIR = Path(__file__).resolve().parent.parent
+_BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 def _get_test_alembic_cfg():
@@ -73,3 +74,29 @@ def client(db):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def sqlite_db(tmp_path):
+    """Create a fresh SQLite file per test, run Alembic migrations, yield a
+    session, then delete the file."""
+    db_path = tmp_path / f"test_{uuid.uuid4().hex}.db"
+    url = f"sqlite:///{db_path}"
+
+    test_engine = create_engine(url, connect_args={"check_same_thread": False})
+
+    # Run Alembic migrations against this per-test DB
+    cfg = AlembicConfig(str(_BACKEND_DIR / "alembic.ini"))
+    cfg.set_main_option("script_location", str(_BACKEND_DIR / "alembic"))
+    cfg.set_main_option("sqlalchemy.url", url)
+    command.upgrade(cfg, "head")
+
+    Session = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+    session = Session()
+    try:
+        yield session
+    finally:
+        session.close()
+        test_engine.dispose()
+        if db_path.exists():
+            db_path.unlink()

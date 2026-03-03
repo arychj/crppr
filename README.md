@@ -32,7 +32,7 @@ Every Item in that tree is the same kind of thing. "Garage" is a Container becau
 
 Each Item can have a short, unique **ident** (e.g. `0042` or `A7F3`) that you can print as a QR code label and stick on the physical object. Scanning a label with your phone instantly opens that item in the app — so you can see what's inside a box without opening it, or figure out where something belongs.
 
-Idents are mutable — you can change, assign, or remove them at any time.
+Idents are unique but mutable — you can change, assign, or remove them at any time.
 
 #### Ghosts
 

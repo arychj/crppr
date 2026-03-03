@@ -140,6 +140,10 @@ export function exportInventoryUrl(format = 'json') {
   return `${API_BASE}/inventory/export?format=${encodeURIComponent(format)}`;
 }
 
+export function getStats() {
+  return request('/stats');
+}
+
 export async function importInventory(file) {
   const formData = new FormData();
   formData.append('file', file);

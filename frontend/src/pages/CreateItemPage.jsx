@@ -22,7 +22,12 @@ export default function CreateItemPage() {
   const [metaRows, setMetaRows] = useState([]);   // { key, value }
   const [newMetaKey, setNewMetaKey] = useState('');
   const [newMetaValue, setNewMetaValue] = useState('');
+  const [editingMetaIdx, setEditingMetaIdx] = useState(null);
+  const [editingMetaValue, setEditingMetaValue] = useState('');
+  const editMetaRef = useRef(null);
   const newMetaValueRef = useRef(null);
+  const newMetaKeyRef = useRef(null);
+  const [showNewMeta, setShowNewMeta] = useState(false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const toast = useToast();
@@ -56,7 +61,39 @@ export default function CreateItemPage() {
   };
 
   // ── Metadata row helpers ────────────────────────────────────────
-  const removeMetaRow = (idx) => setMetaRows((prev) => prev.filter((_, i) => i !== idx));
+  const removeMetaRow = (idx) => {
+    setMetaRows((prev) => prev.filter((_, i) => i !== idx));
+    if (editingMetaIdx === idx) setEditingMetaIdx(null);
+  };
+
+  const startEditingMeta = (idx) => {
+    setEditingMetaIdx(idx);
+    setEditingMetaValue(metaRows[idx].value);
+    setTimeout(() => editMetaRef.current?.focus(), 0);
+  };
+
+  const handleMetaEditBlur = () => {
+    const idx = editingMetaIdx;
+    setEditingMetaIdx(null);
+    if (idx === null) return;
+    setMetaRows((prev) => prev.map((r, i) => (i === idx ? { ...r, value: editingMetaValue } : r)));
+  };
+
+  const handleMetaEditKey = (e) => {
+    if (e.key === 'Enter') e.target.blur();
+    if (e.key === 'Escape') setEditingMetaIdx(null);
+  };
+
+  const handleNewMetaSave = () => {
+    if (newMetaKey.trim() && newMetaValue.trim()) {
+      setMetaRows((prev) => [...prev, { key: newMetaKey.trim(), value: newMetaValue.trim() }]);
+      setNewMetaKey('');
+      setNewMetaValue('');
+      // Auto-open a fresh new-metadata row and focus the key input
+      setShowNewMeta(true);
+      setTimeout(() => newMetaKeyRef.current?.focus(), 0);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -220,46 +257,77 @@ export default function CreateItemPage() {
                   <span className="w-36 text-sm font-medium text-gray-600 dark:text-gray-400 text-right truncate" title={row.key}>
                     {row.key}
                   </span>
-                  <span
-                    className="flex-1 text-sm text-gray-800 dark:text-gray-100 px-1 py-0.5 min-h-[1.5em]"
-                  >
-                    {row.value || <span className="text-gray-400 italic">empty</span>}
-                  </span>
+                  {editingMetaIdx === idx ? (
+                    <input
+                      ref={editMetaRef}
+                      type="text"
+                      className="flex-1 bg-transparent text-sm text-gray-800 dark:text-gray-100 border-b-2 border-blue-400 focus:outline-none px-1 py-0.5"
+                      value={editingMetaValue}
+                      onChange={(e) => setEditingMetaValue(e.target.value)}
+                      onBlur={handleMetaEditBlur}
+                      onKeyDown={handleMetaEditKey}
+                    />
+                  ) : (
+                    <span
+                      onClick={() => startEditingMeta(idx)}
+                      className="flex-1 text-sm text-gray-800 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition px-1 py-0.5 min-h-[1.5em]"
+                      title="Click to edit"
+                    >
+                      {row.value || <span className="text-gray-400 italic">empty</span>}
+                    </span>
+                  )}
+                  {editingMetaIdx === idx ? (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); removeMetaRow(idx); }}
+                      className="text-xs text-red-500 hover:text-red-700"
+                      title="Remove"
+                    >
+                      ✕
+                    </button>
+                  ) : (
+                    <span className="text-xs invisible">✕</span>
+                  )}
+                </div>
+              ))}
+              {showNewMeta ? (
+                <div className="flex items-center gap-2">
+                  <MetadataKeyInput
+                    ref={newMetaKeyRef}
+                    value={newMetaKey}
+                    onChange={setNewMetaKey}
+                    className="w-36"
+                    placeholder="Key"
+                    onSelect={() => newMetaValueRef.current?.focus()}
+                  />
+                  <input
+                    ref={newMetaValueRef}
+                    type="text"
+                    placeholder="Value"
+                    value={newMetaValue}
+                    onChange={(e) => setNewMetaValue(e.target.value)}
+                    onBlur={handleNewMetaSave}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }}
+                    className="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
+                  />
                   <button
                     type="button"
-                    onClick={() => removeMetaRow(idx)}
-                    className="text-xs text-red-500 hover:text-red-700"
+                    onClick={() => { setShowNewMeta(false); setNewMetaKey(''); setNewMetaValue(''); }}
+                    className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-500 dark:hover:text-gray-300"
+                    title="Cancel"
                   >
                     ✕
                   </button>
                 </div>
-              ))}
-              <div className="flex items-center gap-2">
-                <MetadataKeyInput
-                  value={newMetaKey}
-                  onChange={setNewMetaKey}
-                  className="w-36"
-                  placeholder="Key"
-                  onSelect={() => newMetaValueRef.current?.focus()}
-                />
-                <input
-                  ref={newMetaValueRef}
-                  type="text"
-                  placeholder="Value"
-                  value={newMetaValue}
-                  onChange={(e) => setNewMetaValue(e.target.value)}
-                  onBlur={() => {
-                    if (newMetaKey.trim() && newMetaValue.trim()) {
-                      setMetaRows((prev) => [...prev, { key: newMetaKey.trim(), value: newMetaValue.trim() }]);
-                      setNewMetaKey('');
-                      setNewMetaValue('');
-                    }
-                  }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }}
-                  className="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
-                />
-                <span className="text-xs invisible">✕</span>
-              </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => { setShowNewMeta(true); setTimeout(() => newMetaKeyRef.current?.focus(), 0); }}
+                  className="text-xs text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition ml-1"
+                >
+                  + new
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .database import engine
 from .models import Base
-from .routers import items, metadata, ident, settings, inventory
+from .routers import items, metadata, ident, settings, inventory, stats
 
 _log = logging.getLogger(__name__)
 
@@ -60,6 +60,7 @@ app.include_router(metadata.router, prefix="/api")
 app.include_router(ident.router, prefix="/api")
 app.include_router(settings.router, prefix="/api")
 app.include_router(inventory.router, prefix="/api", tags=["inventory"])
+app.include_router(stats.router, prefix="/api", tags=["stats"])
 
 
 @app.get("/api/health", tags=["health"])

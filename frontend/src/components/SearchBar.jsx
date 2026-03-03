@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { searchItems } from '../api';
 import Icon from '@mdi/react';
-import { mdiPackageVariant } from '@mdi/js';
+import { mdiPackageVariant, mdiGhostOutline, mdiHomeExportOutline } from '@mdi/js';
 
 /**
  * Reusable search bar with live results dropdown.
@@ -88,12 +88,15 @@ export default function SearchBar({
               {navigateOnClick ? (
                 <>
                   <Link
-                    to={`/ident/${item.ident}`}
+                    to={item.ident ? `/ident/${item.ident}` : `/id/${item.id}`}
                     className="flex-1 flex items-center space-x-2 min-w-0"
                     onClick={() => { setOpen(false); setQuery(''); }}
                   >
                     <ResultLabel item={item} />
                   </Link>
+                  {item.is_checked_out && (
+                    <Icon path={mdiHomeExportOutline} size={0.6} className="text-amber-500 flex-shrink-0 ml-2" title="Checked out" />
+                  )}
                   {item.is_container && (
                     <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1 ml-2">
                       <Icon path={mdiPackageVariant} size={0.5} />
@@ -109,6 +112,9 @@ export default function SearchBar({
                   >
                     <ResultLabel item={item} />
                   </div>
+                  {item.is_checked_out && (
+                    <Icon path={mdiHomeExportOutline} size={0.6} className="text-amber-500 flex-shrink-0 ml-2" title="Checked out" />
+                  )}
                   {item.is_container && (
                     <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1 ml-2">
                       <Icon path={mdiPackageVariant} size={0.5} />
@@ -141,12 +147,6 @@ function ResultLabel({ item }) {
     <>
       <span className="font-mono text-gray-500 dark:text-gray-400 flex-shrink-0">{item.ident}</span>
       <span className="text-gray-800 dark:text-gray-100 truncate">{item.name || '(unnamed)'}</span>
-      {item.is_container && (
-        <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex-shrink-0 flex items-center gap-1">
-          <Icon path={mdiPackageVariant} size={0.5} />
-          <span className="hidden sm:inline">container</span>
-        </span>
-      )}
     </>
   );
 }

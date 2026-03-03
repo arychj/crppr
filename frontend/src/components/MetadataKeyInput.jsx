@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { listMetadataAttributes, createMetadataAttribute } from '../api';
 
 /**
@@ -6,11 +6,16 @@ import { listMetadataAttributes, createMetadataAttribute } from '../api';
  * If the typed name doesn't exist, it will be created on the backend
  * when the item is saved.
  */
-export default function MetadataKeyInput({ value, onChange, className = '', style, placeholder = 'Key name', onSelect }) {
+export default forwardRef(function MetadataKeyInput({ value, onChange, className = '', style, placeholder = 'Key name', onSelect }, ref) {
   const [suggestions, setSuggestions] = useState([]);
   const [allKeys, setAllKeys] = useState([]);
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+  }));
 
   useEffect(() => {
     listMetadataAttributes()
@@ -57,6 +62,7 @@ export default function MetadataKeyInput({ value, onChange, className = '', styl
   return (
     <div ref={wrapperRef} className={`relative ${className}`} style={style}>
       <input
+        ref={inputRef}
         type="text"
         value={value}
         onChange={handleChange}
@@ -79,4 +85,4 @@ export default function MetadataKeyInput({ value, onChange, className = '', styl
       )}
     </div>
   );
-}
+});

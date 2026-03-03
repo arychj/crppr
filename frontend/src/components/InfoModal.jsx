@@ -12,7 +12,7 @@ import { mdiContentCopy } from '@mdi/js';
  *  - value   — text to display / copy
  *  - onCopy  — optional callback after copy succeeds
  */
-export default function InfoModal({ open, onClose, title, value, onCopy }) {
+export default function InfoModal({ open, onClose, title, value, onCopy, children }) {
   if (!open) return null;
 
   const copy = async () => {
@@ -58,6 +58,8 @@ export default function InfoModal({ open, onClose, title, value, onCopy }) {
               className="shrink-0 text-gray-400 group-hover:text-blue-500 transition"
             />
           </div>
+
+          {children}
         </div>
       </div>
     </>

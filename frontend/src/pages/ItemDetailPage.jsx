@@ -1,9 +1,9 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { getItem, getItemPath, updateItem, getSetting } from '../api';
+import { getItem, getItemPath, updateItem, getSetting, listSettings } from '../api';
 import moment from 'moment';
 import Icon from '@mdi/react';
-import { mdiMapMarkerOutline, mdiLink, mdiClockEditOutline, mdiGhostOutline, mdiHomeExportOutline, mdiPackageVariant, mdiTrayArrowDown, mdiSync } from '@mdi/js';
+import { mdiMapMarkerOutline, mdiLink, mdiClockEditOutline, mdiGhostOutline, mdiHomeExportOutline, mdiPackageVariant, mdiTrayArrowDown, mdiSync, mdiContentCopy } from '@mdi/js';
 import BreadcrumbNav from '../components/BreadcrumbNav';
 import EAVEditor from '../components/EAVEditor';
 import ItemPickerModal from '../components/ItemPickerModal';
@@ -40,7 +40,9 @@ export default function ItemDetailPage() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [confirmConvert, setConfirmConvert] = useState(false);
   const [baseUrl, setBaseUrl] = useState('');
+  const [allowedUris, setAllowedUris] = useState([]);
   const [infoModal, setInfoModal] = useState({ open: false, title: '', value: '' });
+  const [uriModalOpen, setUriModalOpen] = useState(false);
 
   const reload = useCallback(() => {
     setLoading(true);
@@ -68,10 +70,14 @@ export default function ItemDetailPage() {
 
   useEffect(() => { reload(); }, [reload]);
 
-  // Load base_url setting for external link
+  // Load base_url + allowed_uris settings
   useEffect(() => {
-    getSetting('base_url')
-      .then((s) => setBaseUrl(s.value || ''))
+    listSettings()
+      .then((settings) => {
+        const map = Object.fromEntries(settings.map((s) => [s.key, s.value || '']));
+        setBaseUrl(map.base_url || '');
+        try { setAllowedUris(JSON.parse(map.allowed_uris || '[]')); } catch { setAllowedUris([]); }
+      })
       .catch(() => {});
   }, []);
 
@@ -254,15 +260,14 @@ export default function ItemDetailPage() {
             {/* Desktop: full text rows */}
             <div className="hidden md:flex flex-col items-end gap-1">
               {baseUrl && item.ident && (
-                <a
-                  href={`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-xs text-gray-400 dark:text-gray-500 no-underline hover:underline truncate max-w-[18rem]"
+                <button
+                  type="button"
+                  onClick={() => setUriModalOpen(true)}
+                  className="font-mono text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition cursor-pointer bg-transparent border-0 p-0 text-right truncate max-w-[18rem]"
                   title={`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
                 >
                   {`${baseUrl.replace(/\/$/, '')}/-/${item.ident}`}
-                </a>
+                </button>
               )}
               <button
                 type="button"
@@ -295,7 +300,7 @@ export default function ItemDetailPage() {
               {baseUrl && item.ident && (
                 <button
                   type="button"
-                  onClick={() => setInfoModal({ open: true, title: 'URI', value: `${baseUrl.replace(/\/$/, '')}/-/${item.ident}` })}
+                  onClick={() => setUriModalOpen(true)}
                   className="rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 dark:text-gray-500"
                   aria-label="Show URI"
                 >
@@ -479,14 +484,99 @@ export default function ItemDetailPage() {
         variant="warning"
       />
 
-      {/* ────────── Mobile info modal ────────── */}
+      {/* ────────── Info modal (address / last updated) ────────── */}
       <InfoModal
         open={infoModal.open}
         onClose={() => setInfoModal({ open: false, title: '', value: '' })}
         title={infoModal.title}
         value={infoModal.value}
         onCopy={() => toast('Copied to clipboard')}
-      />
+      >
+        {infoModal.title === 'Address' && breadcrumbs.length > 0 && (
+          <div className="mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">Location</p>
+            <div className="text-sm text-gray-700 dark:text-gray-300">
+              {breadcrumbs.map((seg, i) => (
+                <div key={seg.id} style={{ paddingLeft: `${i * 1}rem` }} className="flex items-center gap-1">
+                  <span className="text-gray-400 dark:text-gray-500">{i === breadcrumbs.length - 1 ? '└' : '├'}</span>
+                  <span className={i === breadcrumbs.length - 1 ? 'font-semibold' : ''}>
+                    {seg.name || seg.ident || `#${seg.id}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </InfoModal>
+
+      {/* ────────── URI modal ────────── */}
+      {uriModalOpen && baseUrl && item.ident && (() => {
+        const base = baseUrl.replace(/\/$/, '');
+        const primaryUri = `${base}/-/${item.ident}`;
+        const otherUris = allowedUris
+          .filter((p) => p.includes(':ident'))
+          .map((p) => p.replace(':ident', item.ident));
+
+        return (
+          <>
+            <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setUriModalOpen(false)} />
+            <div className="fixed inset-0 z-50 flex items-center justify-center px-6 pointer-events-none">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm pointer-events-auto animate-slide-in p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Item URIs</h2>
+                  <button
+                    onClick={() => setUriModalOpen(false)}
+                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    aria-label="Close"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Primary URI */}
+                <div
+                  onClick={async () => { try { await navigator.clipboard.writeText(primaryUri); toast('Copied to clipboard'); } catch {} }}
+                  className="flex items-center gap-2 cursor-pointer group bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2"
+                >
+                  <span className="flex-1 font-mono text-sm text-gray-800 dark:text-gray-100 break-all select-all">
+                    {primaryUri}
+                  </span>
+                  <Icon
+                    path={mdiContentCopy}
+                    size={0.7}
+                    className="shrink-0 text-gray-400 group-hover:text-blue-500 transition"
+                  />
+                </div>
+
+                {/* Other URIs */}
+                {otherUris.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500">Other Allowed Item URIs</p>
+                    {otherUris.map((uri, i) => (
+                      <div
+                        key={i}
+                        onClick={async () => { try { await navigator.clipboard.writeText(uri); toast('Copied to clipboard'); } catch {} }}
+                        className="flex items-center gap-2 cursor-pointer group bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2"
+                      >
+                        <span className="flex-1 font-mono text-xs text-gray-600 dark:text-gray-300 break-all select-all">
+                          {uri}
+                        </span>
+                        <Icon
+                          path={mdiContentCopy}
+                          size={0.6}
+                          className="shrink-0 text-gray-400 group-hover:text-blue-500 transition"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }

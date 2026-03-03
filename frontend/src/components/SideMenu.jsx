@@ -25,6 +25,9 @@ import {
   mdiCog,
   mdiClose,
   mdiHomeExportOutline,
+  mdiChartDonut,
+  mdiGhostOutline,
+  mdiPackageVariant,
 } from '@mdi/js';
 
 export default function SideMenu() {
@@ -68,7 +71,7 @@ export default function SideMenu() {
   }, []);
 
   const handleResultClick = (item) => {
-    navigate(`/ident/${item.ident}`);
+    navigate(item.ident ? `/ident/${item.ident}` : `/id/${item.id}`);
     setQuery('');
     setShowResults(false);
   };
@@ -85,6 +88,7 @@ export default function SideMenu() {
     { to: '/metadata', label: 'Metadata', icon: mdiTag },
     { to: '/ident', label: 'Labels', icon: mdiSimOutline },
     { to: '/import-export', label: 'Backups', icon: mdiFileArrowUpDownOutline },
+    { to: '/stats', label: 'Stats', icon: mdiChartDonut },
   ];
 
   // Close sidebar on mobile when navigating
@@ -114,6 +118,9 @@ export default function SideMenu() {
         {/* ── Expanded header: search + add ── */}
         {open ? (
           <div className="flex items-center gap-2 p-3 border-b border-gray-200 dark:border-gray-700" ref={searchRef}>
+            <Link to="/" className="flex-shrink-0 flex items-center justify-center w-6">
+              <img src={logo} alt="crppr" className="h-6 dark:invert" />
+            </Link>
             <div className="relative flex-1">
               <input
                 type="text"
@@ -131,13 +138,23 @@ export default function SideMenu() {
                     <li key={r.id}>
                       <button
                         onClick={() => handleResultClick(r)}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition flex items-center justify-between"
                       >
-                        <span className="font-mono text-gray-500 dark:text-gray-400 mr-1">{r.ident}</span>
-                        <span className="text-gray-800 dark:text-gray-100">{r.name || '(unnamed)'}</span>
-                        {r.is_checked_out && (
-                          <Icon path={mdiHomeExportOutline} size={0.6} className="ml-1 text-amber-500" title="Checked out" />
-                        )}
+                        <div className="flex items-center min-w-0 flex-1">
+                          <span className="font-mono text-gray-500 dark:text-gray-400 mr-1 flex-shrink-0">{r.ident || <span title="Ghost"><Icon path={mdiGhostOutline} size={0.6} className="inline" /></span>}</span>
+                          <span className="text-gray-800 dark:text-gray-100 truncate">{r.name || '(unnamed)'}</span>
+                        </div>
+                        <div className="flex items-center flex-shrink-0">
+                          {r.is_container && (
+                            <span className="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex items-center gap-1 ml-2">
+                              <Icon path={mdiPackageVariant} size={0.5} />
+                              <span className="hidden sm:inline">container</span>
+                            </span>
+                          )}
+                          {r.is_checked_out && (
+                            <Icon path={mdiHomeExportOutline} size={0.6} className="ml-2 text-amber-500 flex-shrink-0" title="Checked out" />
+                          )}
+                        </div>
                       </button>
                     </li>
                   ))}
