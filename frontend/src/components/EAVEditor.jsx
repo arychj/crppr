@@ -13,7 +13,9 @@ import { useToast } from './Toast';
  * Existing values show as click-to-edit text (matching the details box pattern).
  * An empty row at the bottom lets you start typing a new key/value pair.
  */
-export default function EAVEditor({ itemId, existingValues = [], onSaved }) {
+export default function EAVEditor({ itemId, existingValues = [], onSaved, setMetadataFn, deleteMetadataFn }) {
+  const _setMetadata = setMetadataFn || setItemMetadata;
+  const _deleteMetadata = deleteMetadataFn || deleteItemMetadata;
   const [rows, setRows] = useState([]);
   const [editingIdx, setEditingIdx] = useState(null);
   const [editValue, setEditValue] = useState('');
@@ -65,7 +67,7 @@ export default function EAVEditor({ itemId, existingValues = [], onSaved }) {
     const row = rows[idx];
     if (editValue === row.value) return;
     try {
-      await setItemMetadata(itemId, [{ attribute_id: row.attribute_id, value: editValue || null }]);
+      await _setMetadata(itemId, [{ attribute_id: row.attribute_id, value: editValue || null }]);
       setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, value: editValue } : r)));
       toast(`Saved "${row.attribute_name}"`);
       onSaved?.();
@@ -81,7 +83,7 @@ export default function EAVEditor({ itemId, existingValues = [], onSaved }) {
 
   const handleRemove = async (row, idx) => {
     try {
-      await deleteItemMetadata(itemId, row.attribute_id);
+      await _deleteMetadata(itemId, row.attribute_id);
       setRows((prev) => prev.filter((_, i) => i !== idx));
       if (editingIdx === idx) setEditingIdx(null);
       toast(`Removed "${row.attribute_name}"`);
@@ -103,7 +105,7 @@ export default function EAVEditor({ itemId, existingValues = [], onSaved }) {
         const created = await createMetadataAttribute({ name: newKey, datatype: 'text' });
         attrId = created.id;
       }
-      await setItemMetadata(itemId, [{ attribute_id: attrId, value: newValue || null }]);
+      await _setMetadata(itemId, [{ attribute_id: attrId, value: newValue || null }]);
       toast(`Saved "${newKey}"`);
       setNewKey('');
       setNewValue('');

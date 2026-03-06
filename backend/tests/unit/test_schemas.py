@@ -17,9 +17,9 @@ from api.schemas import (
 
 
 def test_item_create_defaults():
-    item = ItemCreate()
+    item = ItemCreate(name="Test")
     assert item.ident is None
-    assert item.name is None
+    assert item.name == "Test"
     assert item.is_container is False
     assert item.is_checked_out is False
     assert item.metadata == []
@@ -27,6 +27,7 @@ def test_item_create_defaults():
 
 def test_item_create_with_metadata():
     item = ItemCreate(
+        name="Color Box",
         ident="BOX-1",
         metadata=[MetadataValueCreate(key="color", value="red")],
     )
@@ -37,6 +38,12 @@ def test_item_create_with_metadata():
 def test_item_create_metadata_key_required():
     with pytest.raises(ValidationError):
         MetadataValueCreate(value="red")  # missing key
+
+
+def test_item_create_name_required():
+    """ItemCreate requires a name field."""
+    with pytest.raises(ValidationError):
+        ItemCreate()
 
 
 # ── ItemUpdate ───────────────────────────────────────────────────────

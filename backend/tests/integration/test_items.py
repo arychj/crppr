@@ -49,7 +49,7 @@ def test_create_child_item(client):
 
 
 def test_create_item_nonexistent_parent(client):
-    r = client.post("/api/item", json={"ident": "ORPHAN", "parent_id": 99999})
+    r = client.post("/api/item", json={"ident": "ORPHAN", "name": "Orphan", "parent_id": 99999})
     assert r.status_code == 404
 
 
@@ -69,16 +69,16 @@ def test_get_item_not_found(client):
 
 
 def test_list_root_items(client):
-    client.post("/api/item", json={"ident": "R1"})
-    client.post("/api/item", json={"ident": "R2"})
+    client.post("/api/item", json={"ident": "R1", "name": "Root1"})
+    client.post("/api/item", json={"ident": "R2", "name": "Root2"})
     r = client.get("/api/item")
     assert r.status_code == 200
     assert len(r.json()) == 2
 
 
 def test_list_root_excludes_children(client):
-    parent = client.post("/api/item", json={"ident": "RP", "is_container": True}).json()
-    client.post("/api/item", json={"ident": "RC", "parent_id": parent["id"]})
+    parent = client.post("/api/item", json={"ident": "RP", "name": "RootP", "is_container": True}).json()
+    client.post("/api/item", json={"ident": "RC", "name": "RootC", "parent_id": parent["id"]})
     r = client.get("/api/item")
     idents = [i["ident"] for i in r.json()]
     assert "RP" in idents
@@ -151,9 +151,9 @@ def test_assign_ident_to_ghost(client):
 
 
 def test_move_item_updates_address(client):
-    a = client.post("/api/item", json={"ident": "A", "is_container": True}).json()
-    b = client.post("/api/item", json={"ident": "B", "is_container": True}).json()
-    child = client.post("/api/item", json={"ident": "X", "parent_id": a["id"]}).json()
+    a = client.post("/api/item", json={"ident": "A", "name": "A", "is_container": True}).json()
+    b = client.post("/api/item", json={"ident": "B", "name": "B", "is_container": True}).json()
+    child = client.post("/api/item", json={"ident": "X", "name": "X", "parent_id": a["id"]}).json()
     assert child["address"] == f"{a['id']}.{child['id']}"
 
     moved = client.patch(f"/api/item/{child['id']}", json={"parent_id": b["id"]}).json()
@@ -161,10 +161,10 @@ def test_move_item_updates_address(client):
 
 
 def test_move_cascades_to_descendants(client):
-    a = client.post("/api/item", json={"ident": "MA", "is_container": True}).json()
-    b = client.post("/api/item", json={"ident": "MB", "is_container": True}).json()
-    child = client.post("/api/item", json={"ident": "MC", "parent_id": a["id"], "is_container": True}).json()
-    grandchild = client.post("/api/item", json={"ident": "MG", "parent_id": child["id"]}).json()
+    a = client.post("/api/item", json={"ident": "MA", "name": "MA", "is_container": True}).json()
+    b = client.post("/api/item", json={"ident": "MB", "name": "MB", "is_container": True}).json()
+    child = client.post("/api/item", json={"ident": "MC", "name": "MC", "parent_id": a["id"], "is_container": True}).json()
+    grandchild = client.post("/api/item", json={"ident": "MG", "name": "MG", "parent_id": child["id"]}).json()
 
     # Before move
     assert grandchild["address"] == f"{a['id']}.{child['id']}.{grandchild['id']}"
@@ -178,8 +178,8 @@ def test_move_cascades_to_descendants(client):
 
 
 def test_prevent_move_under_self(client):
-    parent = client.post("/api/item", json={"ident": "SP", "is_container": True}).json()
-    child = client.post("/api/item", json={"ident": "SC", "parent_id": parent["id"], "is_container": True}).json()
+    parent = client.post("/api/item", json={"ident": "SP", "name": "SP", "is_container": True}).json()
+    child = client.post("/api/item", json={"ident": "SC", "name": "SC", "parent_id": parent["id"], "is_container": True}).json()
     r = client.patch(f"/api/item/{parent['id']}", json={"parent_id": child["id"]})
     assert r.status_code == 400
 
@@ -205,7 +205,7 @@ def test_get_item_path(client):
 
 
 def test_lookup_by_ident_redirects(client):
-    item = client.post("/api/item", json={"ident": "LK1"}).json()
+    item = client.post("/api/item", json={"ident": "LK1", "name": "Lookup"}).json()
     r = client.get(f"/api/ident/LK1", follow_redirects=False)
     assert r.status_code == 307
     assert f"/api/item/{item['id']}" in r.headers["location"]
@@ -240,6 +240,7 @@ def test_create_item_new_key_auto_creates_attribute(client):
     """A metadata key that doesn't already exist gets created automatically."""
     r = client.post("/api/item", json={
         "ident": "META2",
+        "name": "Meta2",
         "metadata": [{"key": "brand_new_key", "value": "val"}],
     })
     assert r.status_code == 201
@@ -254,7 +255,7 @@ def test_create_item_new_key_auto_creates_attribute(client):
 def test_delete_metadata_value(client):
     # Create attribute + item + value
     attr = client.post("/api/metadata-attributes/", json={"name": "del_test"}).json()
-    item = client.post("/api/item", json={"ident": "DEL1"}).json()
+    item = client.post("/api/item", json={"ident": "DEL1", "name": "Del1"}).json()
     client.post(f"/api/item/{item['id']}/metadata", json=[
         {"attribute_id": attr["id"], "value": "temp"},
     ])

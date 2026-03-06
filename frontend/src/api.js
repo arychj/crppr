@@ -69,6 +69,53 @@ export function moveItem(itemIdent, destinationIdent) {
   });
 }
 
+// ── Templates ──────────────────────────────────────────────────────
+
+export function listTemplates() {
+  return request('/template');
+}
+
+export function getTemplate(id) {
+  return request(`/template/${id}`);
+}
+
+export function searchTemplates(query) {
+  return request(`/template/search?q=${encodeURIComponent(query)}`);
+}
+
+export function createTemplate(data) {
+  return request('/template', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateTemplate(id, data) {
+  return request(`/template/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteTemplate(id) {
+  return request(`/template/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export function setTemplateMetadata(templateId, values) {
+  return request(`/template/${templateId}/metadata`, {
+    method: 'POST',
+    body: JSON.stringify(values),
+  });
+}
+
+export function deleteTemplateMetadata(templateId, attributeId) {
+  return request(`/template/${templateId}/metadata/${attributeId}`, {
+    method: 'DELETE',
+  });
+}
+
 // ── Metadata ───────────────────────────────────────────────────────
 
 export function listMetadataAttributes() {

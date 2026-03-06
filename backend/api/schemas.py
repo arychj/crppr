@@ -7,11 +7,12 @@ from pydantic import BaseModel
 
 class ItemBase(BaseModel):
     ident: Optional[str] = None
-    name: Optional[str] = None
+    name: str
     description: Optional[str] = None
     parent_id: Optional[int] = None
     is_container: bool = False
     is_checked_out: bool = False
+    is_template: bool = False
 
 
 class MetadataValueCreate(BaseModel):
@@ -32,6 +33,7 @@ class ItemUpdate(BaseModel):
     parent_id: Optional[int] = None  # triggers address recalculation
     is_container: Optional[bool] = None
     is_checked_out: Optional[bool] = None
+    is_template: Optional[bool] = None
 
 
 class MetadataValueOut(BaseModel):
@@ -51,6 +53,7 @@ class ItemOut(BaseModel):
     address: str
     is_container: bool
     is_checked_out: bool = False
+    is_template: bool = False
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     last_updated: Optional[datetime] = None
@@ -66,6 +69,7 @@ class ItemChildOut(BaseModel):
     name: Optional[str] = None
     is_container: bool
     is_checked_out: bool = False
+    is_template: bool = False
 
     model_config = {"from_attributes": True}
 

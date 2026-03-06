@@ -41,7 +41,7 @@ def _item_to_out(item: Item) -> ItemOut:
         for mv in sorted_mvs
     ]
     sorted_children = sorted(
-        item.children,
+        (c for c in item.children if not c.is_template),
         key=lambda c: (not c.is_container, (c.name or "").lower()),
     )
     children = [
@@ -51,6 +51,7 @@ def _item_to_out(item: Item) -> ItemOut:
             name=c.name,
             is_container=c.is_container,
             is_checked_out=c.is_checked_out,
+            is_template=c.is_template,
         )
         for c in sorted_children
     ]
@@ -63,6 +64,7 @@ def _item_to_out(item: Item) -> ItemOut:
         address=item.address,
         is_container=item.is_container,
         is_checked_out=item.is_checked_out,
+        is_template=item.is_template,
         created_at=item.created_at,
         updated_at=item.updated_at,
         last_updated=item.last_updated,
@@ -77,7 +79,7 @@ def _item_to_out(item: Item) -> ItemOut:
 def list_items(db: Session = Depends(get_db)):
     items = (
         db.query(Item)
-        .filter(Item.parent_id.is_(None))
+        .filter(Item.parent_id.is_(None), Item.is_template == False)
         .order_by(Item.is_container.desc(), func.lower(Item.name))
         .all()
     )
@@ -90,7 +92,7 @@ def list_items(db: Session = Depends(get_db)):
 def recent_items(db: Session = Depends(get_db)):
     items = (
         db.query(Item)
-        .filter(Item.last_viewed.isnot(None))
+        .filter(Item.last_viewed.isnot(None), Item.is_template == False)
         .order_by(Item.last_viewed.desc())
         .limit(10)
         .all()
@@ -122,6 +124,7 @@ def search_items(
     items = (
         db.query(Item)
         .filter(
+            Item.is_template == False,
             or_(
                 Item.ident.ilike(pattern),
                 Item.name.ilike(pattern),
@@ -147,6 +150,9 @@ def move_item(body: MoveRequest, db: Session = Depends(get_db)):
     dest = db.query(Item).filter(Item.ident == body.destination_ident).first()
     if not dest:
         raise HTTPException(status_code=404, detail=f'Destination with ident "{body.destination_ident}" not found')
+
+    if dest.is_template:
+        raise HTTPException(status_code=400, detail="Cannot move items into a template")
 
     if not dest.is_container:
         raise HTTPException(status_code=400, detail=f'Destination "{body.destination_ident}" is not a container')
@@ -184,6 +190,8 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
     item = db.get(Item, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
+    if item.is_template:
+        raise HTTPException(status_code=404, detail="Item not found")
     # Touch last_viewed
     item.last_viewed = datetime.now(timezone.utc)
     db.commit()
@@ -202,11 +210,13 @@ def create_item(body: ItemCreate, db: Session = Depends(get_db)):
         if db.query(Item).filter(Item.ident == ident).first():
             raise HTTPException(status_code=409, detail=f'An item with ident "{ident}" already exists')
 
-    # Validate parent exists
+    # Validate parent exists and is not a template
     if body.parent_id is not None:
         parent = db.get(Item, body.parent_id)
         if not parent:
             raise HTTPException(status_code=404, detail="Parent item not found")
+        if parent.is_template:
+            raise HTTPException(status_code=400, detail="Cannot add children to a template")
 
     item = Item(
         ident=ident,
@@ -215,6 +225,7 @@ def create_item(body: ItemCreate, db: Session = Depends(get_db)):
         parent_id=body.parent_id,
         is_container=body.is_container,
         is_checked_out=body.is_checked_out,
+        is_template=False,  # items created via /item are never templates
         last_updated=datetime.now(timezone.utc),
     )
     db.add(item)
@@ -237,6 +248,8 @@ def create_item(body: ItemCreate, db: Session = Depends(get_db)):
 def update_item(item_id: int, body: ItemUpdate, db: Session = Depends(get_db)):
     item = db.get(Item, item_id)
     if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    if item.is_template:
         raise HTTPException(status_code=404, detail="Item not found")
 
     parent_changed = False
@@ -266,6 +279,8 @@ def update_item(item_id: int, body: ItemUpdate, db: Session = Depends(get_db)):
             parent = db.get(Item, body.parent_id)
             if not parent:
                 raise HTTPException(status_code=404, detail="Parent item not found")
+            if parent.is_template:
+                raise HTTPException(status_code=400, detail="Cannot add children to a template")
             # Prevent moving an item under itself
             if parent.address and parent.address.startswith(item.address):
                 raise HTTPException(status_code=400, detail="Cannot move an item under itself")
@@ -289,6 +304,8 @@ def update_item(item_id: int, body: ItemUpdate, db: Session = Depends(get_db)):
 def get_item_path(item_id: int, db: Session = Depends(get_db)):
     item = db.get(Item, item_id)
     if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    if item.is_template:
         raise HTTPException(status_code=404, detail="Item not found")
 
     ids_in_path = [int(seg) for seg in item.address.split(".") if seg]
@@ -338,6 +355,8 @@ def set_metadata(item_id: int, values: list[MetadataValueSet], db: Session = Dep
     item = db.get(Item, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
+    if item.is_template:
+        raise HTTPException(status_code=404, detail="Item not found")
 
     results = []
     for mv in values:
@@ -370,6 +389,8 @@ def set_metadata(item_id: int, values: list[MetadataValueSet], db: Session = Dep
 def delete_metadata_value(item_id: int, attribute_id: int, db: Session = Depends(get_db)):
     item = db.get(Item, item_id)
     if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    if item.is_template:
         raise HTTPException(status_code=404, detail="Item not found")
     mv = (
         db.query(MetadataValue)

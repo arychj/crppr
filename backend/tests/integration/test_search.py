@@ -20,7 +20,7 @@ def test_search_by_ident(client):
 
 
 def test_search_by_description(client):
-    client.post("/api/item", json={"ident": "D1", "description": "Contains winter clothes"})
+    client.post("/api/item", json={"ident": "D1", "name": "Winter Box", "description": "Contains winter clothes"})
     r = client.get("/api/item/search?q=winter")
     assert r.status_code == 200
     assert len(r.json()) == 1

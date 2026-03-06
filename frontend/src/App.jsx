@@ -16,6 +16,7 @@ import ImportExportPage from './pages/ImportExportPage';
 import MovePage from './pages/MovePage';
 import CheckoutPage from './pages/CheckoutPage';
 import StatsPage from './pages/StatsPage';
+import TemplateDetailPage from './pages/TemplateDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
                 <Route path="/import-export" element={<ImportExportPage />} />
                 <Route path="/stats" element={<StatsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/template/:id" element={<TemplateDetailPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
             </Routes>

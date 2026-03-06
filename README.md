@@ -71,6 +71,19 @@ Items can carry arbitrary **metadata** as key-value pairs (an "Entity-Attribute-
 
 You can nest as deep as you need (`House → Garage → Parts Cabinet → Drawer A → bag of screws`) or keep things flat — the hierarchy adapts to however you think about your stuff.
 
+### Templates
+
+A **template** is a reusable blueprint for items you create often. Templates are managed from the **Settings** page and are available on the **Add Item** page via a picker button. When you select a template, the new item form is pre-filled with the template's name, description, container flag, and all of its metadata values — saving you from re-entering the same details every time.
+
+Templates live in a separate space from your regular inventory:
+
+- They **never receive identifiers** (idents) and cannot be scanned via QR code.
+- They **cannot have children** and **cannot be placed inside a container** — they exist outside the inventory hierarchy.
+- They are **hidden from the browse tree**, normal search, stats, and import/export.
+- Each template has its own detail page (`/template/:id`) where you can edit its properties and metadata.
+
+Think of templates as cookie cutters: they define the shape of future items but aren't items themselves.
+
 ### Check In / Out
 
 Sometimes things leave their containers — a drill goes out to a job site, a book gets lent to a friend, a bin of holiday decorations comes down from the attic. The **Check In / Out** feature lets you flag an item as "checked out" so you know it isn't where the inventory says it should be. Checked-out items display an amber icon everywhere they appear: the home page recents list, search dropdowns, the item detail page, container contents, and the item picker modal.

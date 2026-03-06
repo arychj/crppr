@@ -1,7 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
-import { listSettings, setSetting } from '../api';
+import { Link } from 'react-router-dom';
+import { listSettings, setSetting, listTemplates, createTemplate, deleteTemplate } from '../api';
 import { useToast } from '../components/Toast';
 import useDocTitle from '../hooks/useDocTitle';
+import Icon from '@mdi/react';
+import { mdiFileDocumentOutline, mdiTrashCanOutline, mdiPlus } from '@mdi/js';
 
 export default function SettingsPage() {
   useDocTitle('Settings');
@@ -35,6 +38,9 @@ export default function SettingsPage() {
   const [origQrType, setOrigQrType] = useState('svg');
   const [qrMargin, setQrMargin] = useState('10');
   const [origQrMargin, setOrigQrMargin] = useState('10');
+  const [templates, setTemplates] = useState([]);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [creatingTemplate, setCreatingTemplate] = useState(false);
 
   const loadSettings = useCallback(() => {
     listSettings().then((settings) => {
@@ -69,6 +75,36 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => { loadSettings(); }, [loadSettings]);
+
+  const loadTemplates = useCallback(() => {
+    listTemplates().then(setTemplates).catch(console.error);
+  }, []);
+  useEffect(() => { loadTemplates(); }, [loadTemplates]);
+
+  const handleCreateTemplate = async () => {
+    if (!newTemplateName.trim() || creatingTemplate) return;
+    setCreatingTemplate(true);
+    try {
+      await createTemplate({ name: newTemplateName.trim() });
+      setNewTemplateName('');
+      loadTemplates();
+      toast('Template created');
+    } catch (err) {
+      toast(`Failed: ${err.message}`, 'error');
+    } finally {
+      setCreatingTemplate(false);
+    }
+  };
+
+  const handleDeleteTemplate = async (tpl) => {
+    try {
+      await deleteTemplate(tpl.id);
+      loadTemplates();
+      toast('Template deleted');
+    } catch (err) {
+      toast(`Failed: ${err.message}`, 'error');
+    }
+  };
 
   const handleTaglineBlur = async () => {
     if (tagline === origTagline) return;
@@ -251,6 +287,62 @@ export default function SettingsPage() {
             <p className="text-xs text-gray-400 dark:text-gray-500">When enabled, scanned codes that don't match any pattern will still attempt to navigate using the extracted ident (with a longer delay).</p>
           </div>
         </label>
+      </div>
+
+      {/* Templates */}
+      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 pt-2">Item Templates</h2>
+      <div className="bg-white dark:bg-gray-800 rounded shadow p-6 space-y-4">
+        <p className="text-xs text-gray-400 dark:text-gray-500">
+          Templates are reusable item blueprints (with metadata). Use them from the Add Item page to pre-fill fields.
+        </p>
+
+        {templates.length === 0 && (
+          <p className="text-sm text-gray-400 italic">No templates yet.</p>
+        )}
+
+        {templates.map((tpl) => (
+          <div key={tpl.id} className="flex items-center gap-2 group">
+            <Icon path={mdiFileDocumentOutline} size={0.7} className="text-teal-500 flex-shrink-0" />
+            <Link
+              to={`/template/${tpl.id}`}
+              className="flex-1 text-sm text-gray-800 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition truncate"
+            >
+              {tpl.name || <span className="text-gray-400 italic">(unnamed)</span>}
+              {tpl.is_container && (
+                <span className="ml-2 text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-1.5 py-0.5 rounded-full">
+                  container
+                </span>
+              )}
+            </Link>
+            <span className="text-xs text-gray-400">{tpl.metadata?.length || 0} fields</span>
+            <button
+              onClick={() => handleDeleteTemplate(tpl)}
+              className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition p-1"
+              title="Delete template"
+            >
+              <Icon path={mdiTrashCanOutline} size={0.6} />
+            </button>
+          </div>
+        ))}
+
+        <div className="flex items-center gap-2 pt-2 border-t dark:border-gray-700">
+          <input
+            type="text"
+            value={newTemplateName}
+            onChange={(e) => setNewTemplateName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTemplate(); }}
+            placeholder="New template name…"
+            className="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
+          />
+          <button
+            onClick={handleCreateTemplate}
+            disabled={creatingTemplate || !newTemplateName.trim()}
+            className="flex items-center gap-1 bg-teal-600 text-white px-3 py-2 rounded text-sm hover:bg-teal-700 disabled:opacity-50 transition"
+          >
+            <Icon path={mdiPlus} size={0.6} />
+            Add
+          </button>
+        </div>
       </div>
 
       {/* Ident Generation */}

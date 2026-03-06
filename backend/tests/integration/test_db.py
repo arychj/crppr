@@ -83,19 +83,19 @@ def test_parent_child_relationship(sqlite_db):
 def test_address_materialized_path(sqlite_db):
     """Address field stores the dot-separated materialized path and supports
     LIKE prefix queries for finding descendants."""
-    root = Item(ident="R", is_container=True, address="")
+    root = Item(ident="R", name="Root", is_container=True, address="")
     sqlite_db.add(root)
     sqlite_db.commit()
     root.address = str(root.id)
     sqlite_db.commit()
 
-    mid = Item(ident="M", is_container=True, parent_id=root.id, address="")
+    mid = Item(ident="M", name="Mid", is_container=True, parent_id=root.id, address="")
     sqlite_db.add(mid)
     sqlite_db.commit()
     mid.address = f"{root.id}.{mid.id}"
     sqlite_db.commit()
 
-    leaf = Item(ident="L", parent_id=mid.id, address="")
+    leaf = Item(ident="L", name="Leaf", parent_id=mid.id, address="")
     sqlite_db.add(leaf)
     sqlite_db.commit()
     leaf.address = f"{root.id}.{mid.id}.{leaf.id}"

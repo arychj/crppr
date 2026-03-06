@@ -45,7 +45,7 @@ def test_reorder_metadata_attributes(client):
 
 def test_delete_metadata_attribute(client):
     attr = client.post("/api/metadata-attributes/", json={"name": "Temp"}).json()
-    item = client.post("/api/item", json={"ident": "DEL1"}).json()
+    item = client.post("/api/item", json={"ident": "DEL1", "name": "Delete Test"}).json()
     client.post(f"/api/item/{item['id']}/metadata", json=[{"attribute_id": attr["id"], "value": "x"}])
     r = client.delete(f"/api/metadata-attributes/{attr['id']}")
     assert r.status_code == 204
@@ -55,7 +55,7 @@ def test_delete_metadata_attribute(client):
 
 
 def test_set_item_metadata(client):
-    item = client.post("/api/item", json={"ident": "M1"}).json()
+    item = client.post("/api/item", json={"ident": "M1", "name": "Weight Item"}).json()
     attr = client.post("/api/metadata-attributes/", json={"name": "Weight"}).json()
 
     r = client.post(
@@ -70,7 +70,7 @@ def test_set_item_metadata(client):
 
 
 def test_update_existing_metadata(client):
-    item = client.post("/api/item", json={"ident": "M2"}).json()
+    item = client.post("/api/item", json={"ident": "M2", "name": "Color Item"}).json()
     attr = client.post("/api/metadata-attributes/", json={"name": "Color"}).json()
 
     # Set initial value
@@ -96,7 +96,7 @@ def test_metadata_on_nonexistent_item(client):
 
 
 def test_metadata_with_nonexistent_attribute(client):
-    item = client.post("/api/item", json={"ident": "M3"}).json()
+    item = client.post("/api/item", json={"ident": "M3", "name": "Bad Attr"}).json()
     r = client.post(
         f"/api/item/{item['id']}/metadata",
         json=[{"attribute_id": 99999, "value": "x"}],
@@ -105,7 +105,7 @@ def test_metadata_with_nonexistent_attribute(client):
 
 
 def test_item_detail_includes_metadata(client):
-    item = client.post("/api/item", json={"ident": "M4"}).json()
+    item = client.post("/api/item", json={"ident": "M4", "name": "Brand Item"}).json()
     attr = client.post("/api/metadata-attributes/", json={"name": "Brand"}).json()
     client.post(
         f"/api/item/{item['id']}/metadata",

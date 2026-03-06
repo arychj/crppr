@@ -37,7 +37,7 @@ def _item_to_dict(item: Item) -> dict:
 
 def _build_tree(db: Session) -> list[dict]:
     """Export all items as a flat list of dicts (parent referenced by ident)."""
-    items = db.query(Item).order_by(Item.address).all()
+    items = db.query(Item).filter(Item.is_template == False).order_by(Item.address).all()
     return [_item_to_dict(i) for i in items]
 
 

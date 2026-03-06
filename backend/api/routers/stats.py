@@ -10,8 +10,8 @@ router = APIRouter()
 
 @router.get("/stats")
 def get_stats(db: Session = Depends(get_db)):
-    total = db.query(sa_func.count(Item.id)).scalar() or 0
-    containers = db.query(sa_func.count(Item.id)).filter(Item.is_container == True).scalar() or 0
+    total = db.query(sa_func.count(Item.id)).filter(Item.is_template == False).scalar() or 0
+    containers = db.query(sa_func.count(Item.id)).filter(Item.is_container == True, Item.is_template == False).scalar() or 0
     items = total - containers
 
     # Average items per container (children count for each container)
@@ -21,7 +21,7 @@ def get_stats(db: Session = Depends(get_db)):
 
     # Depth stats from address field: depth = number of '.' separators + 1
     # Address looks like "1.2.3" so depth = count of '.' + 1
-    all_addresses = db.query(Item.address).all()
+    all_addresses = db.query(Item.address).filter(Item.is_template == False).all()
     depths = []
     for (addr,) in all_addresses:
         if addr:

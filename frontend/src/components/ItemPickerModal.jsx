@@ -15,6 +15,7 @@ import { searchItems } from '../api';
  *  - filterFn(item) — optional filter applied to results (e.g. containers only)
  *  - createUrl      — URL for the "Create new item" link at the bottom (optional)
  *  - createLabel    — label for the create link (default: "+ Create new item")
+ *  - searchFn       — optional custom search function (default: searchItems)
  */
 export default function ItemPickerModal({
   open,
@@ -24,7 +25,9 @@ export default function ItemPickerModal({
   filterFn,
   createUrl,
   createLabel = '+ Create new item',
+  searchFn,
 }) {
+  const _search = searchFn || searchItems;
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -52,7 +55,7 @@ export default function ItemPickerModal({
     setLoading(true);
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      searchItems(query.trim())
+      _search(query.trim())
         .then((data) => {
           setResults(filterFn ? data.filter(filterFn) : data);
         })

@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { createItem, getItem } from '../api';
+import { createItem, getItem, getTemplate, searchTemplates } from '../api';
 import { useToast } from '../components/Toast';
 import MetadataKeyInput from '../components/MetadataKeyInput';
 import ItemPickerModal from '../components/ItemPickerModal';
 import Icon from '@mdi/react';
-import { mdiContentDuplicate } from '@mdi/js';
+import { mdiContentCopy, mdiContentDuplicate } from '@mdi/js';
 
 export default function CreateItemPage() {
   const navigate = useNavigate();
@@ -19,6 +19,7 @@ export default function CreateItemPage() {
   const [parentLabel, setParentLabel] = useState('');
   const [parentPickerOpen, setParentPickerOpen] = useState(false);
   const [clonePickerOpen, setClonePickerOpen] = useState(false);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [metaRows, setMetaRows] = useState([]);   // { key, value }
   const [newMetaKey, setNewMetaKey] = useState('');
   const [newMetaValue, setNewMetaValue] = useState('');
@@ -59,7 +60,23 @@ export default function CreateItemPage() {
       toast(`Clone failed: ${err.message}`, 'error');
     }
   };
-
+  // ── Template handler ───────────────────────────────────────────────────
+  const handleTemplateSelect = async (selected) => {
+    setTemplatePickerOpen(false);
+    try {
+      const full = await getTemplate(selected.id);
+      setDescription(full.description || '');
+      setIsContainer(full.is_container);
+      setMetaRows(
+        (full.metadata || []).map((m) => ({ key: m.attribute_name, value: m.value || '' }))
+      );
+      setNewMetaKey('');
+      setNewMetaValue('');
+      toast('Fields copied from template "' + (full.name || '(unnamed)') + '"');
+    } catch (err) {
+      toast(`Template load failed: ${err.message}`, 'error');
+    }
+  };
   // ── Metadata row helpers ────────────────────────────────────────
   const removeMetaRow = (idx) => {
     setMetaRows((prev) => prev.filter((_, i) => i !== idx));
@@ -99,6 +116,11 @@ export default function CreateItemPage() {
     e.preventDefault();
     setSaving(true);
     setError('');
+    if (!name.trim()) {
+      setError('Name is required');
+      setSaving(false);
+      return;
+    }
     try {
       const metadata = metaRows
         .filter((r) => r.key.trim())
@@ -106,7 +128,7 @@ export default function CreateItemPage() {
 
       const data = {
         ident: ident || null,
-        name: name || null,
+        name: name.trim(),
         description: description || null,
         parent_id: parentId ? Number(parentId) : null,
         is_container: isContainer,
@@ -132,8 +154,16 @@ export default function CreateItemPage() {
             onClick={() => setClonePickerOpen(true)}
             className="flex items-center gap-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
           >
-            <Icon path={mdiContentDuplicate} size={0.5} />
+            <Icon path={mdiContentCopy} size={0.5} />
             Clone
+          </button>
+          <button
+            type="button"
+            onClick={() => setTemplatePickerOpen(true)}
+            className="flex items-center gap-1 text-xs bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded hover:bg-teal-200 dark:hover:bg-teal-800 transition"
+          >
+            <Icon path={mdiContentDuplicate} size={0.5} />
+            Template
           </button>
           <button
             type="button"
@@ -153,6 +183,14 @@ export default function CreateItemPage() {
         onSelect={handleClone}
       />
 
+      <ItemPickerModal
+        open={templatePickerOpen}
+        onClose={() => setTemplatePickerOpen(false)}
+        title="Use template"
+        onSelect={handleTemplateSelect}
+        searchFn={searchTemplates}
+      />
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* ── Left column: core fields ──────────────────────── */}
@@ -169,11 +207,12 @@ export default function CreateItemPage() {
             </label>
 
             <label className="block space-y-1">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Name</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Name <span className="text-red-400">*</span></span>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required
                 className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             </label>
